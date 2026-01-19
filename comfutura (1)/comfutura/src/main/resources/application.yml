@@ -17,12 +17,6 @@ spring:
 server:
   port: 8080
 
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-
 security:
   jwt:
     secret-key: 586B633834416E396D7436753879382F423F4428482B4C6250655367566B5970

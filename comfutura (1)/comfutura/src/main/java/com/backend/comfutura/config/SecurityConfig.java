@@ -28,21 +28,15 @@ public class SecurityConfig {
                 // Deshabilitamos CSRF porque usamos JWT (stateless)
                 .csrf(csrf -> csrf.disable())
 
-                // Configuración de autorización de requests
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas (sin autenticación)
                         .requestMatchers(
-                                "/api/auth/**",                     // login, register, refresh token, etc.
-                                "/v3/api-docs/**",                  // Documentación OpenAPI (JSON/YAML)
-                                "/v3/api-docs.yaml",                // En caso de que uses yaml
-                                "/swagger-ui/**",                   // Recursos de la UI (js, css, etc.)
-                                "/swagger-ui.html",                 // Ruta clásica/legacy
-                                "/swagger-ui/index.html",           // Ruta más común en springdoc recientes
-                                "/swagger-resources/**",            // Por si acaso (muy raro ya)
-                                "/webjars/**"                       // Recursos webjars que usa swagger-ui
+                                "/api/auth/**",
+                                "/v3/api-docs/**",                  // ← Este con /** es clave (muy importante)
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/index.html",           // ← A veces necesario en versiones recientes
+                                "/webjars/**"                       // ← Recursos JS/CSS de swagger
                         ).permitAll()
-
-                        // Todo el resto requiere autenticación
                         .anyRequest().authenticated()
                 )
 
@@ -60,9 +54,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Bean necesario si quieres exponer AuthenticationManager (por ejemplo para usarlo en AuthService)
-     */
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

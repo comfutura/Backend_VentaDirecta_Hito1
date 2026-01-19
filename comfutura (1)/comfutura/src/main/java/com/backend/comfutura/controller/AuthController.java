@@ -5,6 +5,7 @@ import com.backend.comfutura.model.Usuario;
 import com.backend.comfutura.record.AuthResponse;
 import com.backend.comfutura.record.LoginRequest;
 import com.backend.comfutura.record.UserJwtDto;
+import com.backend.comfutura.repository.UsuarioRepository;
 import com.backend.comfutura.service.UsuarioDetailsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -28,6 +31,8 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UsuarioDetailsService usuarioDetailsService;
     private final JwtService jwtService;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
@@ -84,5 +89,39 @@ public class AuthController {
                 "message", "Logout exitoso",
                 "status", "success"
         ));
+    }
+
+    @PostMapping("/encrypt-passwords")
+    public ResponseEntity<String> encryptAllUserPasswords() {
+
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        int actualizados = 0;
+        int omitidos = 0;
+
+        for (Usuario usuario : usuarios) {
+            String contraseñaActual = usuario.getPassword();
+
+            // Si ya parece estar encriptada (BCrypt empieza con $2a$, $2b$, $2y$)
+            if (contraseñaActual != null &&
+                    (contraseñaActual.startsWith("$2a$") ||
+                            contraseñaActual.startsWith("$2b$") ||
+                            contraseñaActual.startsWith("$2y$"))) {
+                omitidos++;
+                continue;
+            }
+
+            // Encriptamos
+            String contraseñaEncriptada = passwordEncoder.encode(contraseñaActual);
+            usuario.setPassword(contraseñaEncriptada);
+            usuarioRepository.save(usuario);
+            actualizados++;
+        }
+
+        String mensaje = String.format(
+                "Migración finalizada. Contraseñas actualizadas: %d | Omitidas (ya encriptadas): %d | Total usuarios: %d",
+                actualizados, omitidos, usuarios.size()
+        );
+
+        return ResponseEntity.ok(mensaje);
     }
 }
