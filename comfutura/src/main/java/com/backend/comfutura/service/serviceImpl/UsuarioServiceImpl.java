@@ -65,25 +65,27 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // Eliminar roles antiguos
-        usuarioRolRepository.deleteAll(
-                usuarioRolRepository.findAll().stream()
-                        .filter(ur -> ur.getId().getIdUsuario().equals(idUsuario))
-                        .collect(Collectors.toList())
-        );
+        List<UsuarioRol> rolesExistentes = usuarioRolRepository.findAll()
+                .stream()
+                .filter(ur -> ur.getUsuario().getIdUsuario().equals(idUsuario))
+                .collect(Collectors.toList());
+        usuarioRolRepository.deleteAll(rolesExistentes);
 
         // Asignar nuevos roles
         for (Integer rolId : idsRoles) {
             Rol rol = rolRepository.findById(rolId)
                     .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
 
+            UsuarioRolId urId = new UsuarioRolId(idUsuario, rolId);
             UsuarioRol ur = UsuarioRol.builder()
-                    .id(new UsuarioRolId(idUsuario, rolId))
+                    .id(urId)
                     .usuario(usuario)
                     .rol(rol)
                     .build();
             usuarioRolRepository.save(ur);
         }
     }
+
 
     @Override
     public void activarDesactivarUsuario(Integer idUsuario, boolean activo) {

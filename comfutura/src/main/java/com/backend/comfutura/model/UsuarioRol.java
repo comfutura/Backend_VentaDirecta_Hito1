@@ -6,20 +6,22 @@ import lombok.*;
 
 @Entity
 @Table(name = "usuario_rol")
-@IdClass(UsuarioRolId.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UsuarioRol {
 
-    @Id
+    @EmbeddedId
+    private UsuarioRolId id;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @MapsId("idUsuario")
+    @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_rol", nullable = false)
+    @MapsId("idRol")
+    @JoinColumn(name = "id_rol")
     private Rol rol;
 }
