@@ -198,28 +198,73 @@ CREATE TABLE maestro_codigo (
 -- =====================================================
 -- 7. OTS (NÚCLEO DEL SISTEMA)
 -- =====================================================
+CREATE TABLE proyecto (
+                          id_proyecto INT AUTO_INCREMENT PRIMARY KEY,
+                          nombre VARCHAR(150) NOT NULL,
+                          descripcion VARCHAR(255),
+                          activo TINYINT(1) DEFAULT 1
+);
+CREATE TABLE fase (
+                      id_fase INT AUTO_INCREMENT PRIMARY KEY,
+                      nombre VARCHAR(100) NOT NULL,
+                      orden INT,
+                      activo TINYINT(1) DEFAULT 1
+);
+CREATE TABLE site (
+                      id_site INT AUTO_INCREMENT PRIMARY KEY,
+                      nombre VARCHAR(150) NOT NULL,
+                      direccion VARCHAR(255),
+                      activo TINYINT(1) DEFAULT 1
+);
+CREATE TABLE region (
+                        id_region INT AUTO_INCREMENT PRIMARY KEY,
+                        nombre VARCHAR(100) NOT NULL,
+                        activo TINYINT(1) DEFAULT 1
+);
 
 CREATE TABLE ots (
                      id_ots INT AUTO_INCREMENT PRIMARY KEY,
 
-                     ot BIGINT NOT NULL UNIQUE,      -- Número de OT
-                     ceco VARCHAR(20) NOT NULL,      -- Centro de costos
+                     ot BIGINT NOT NULL UNIQUE,          -- Número de OT
+                     ceco VARCHAR(20) NOT NULL,          -- Centro de costos
 
+                     id_ots_anterior INT NULL,              -- OT anterior
                      id_cliente INT NOT NULL,
                      id_area INT NOT NULL,
+                     id_proyecto INT NOT NULL,
+                     id_fase INT NOT NULL,
+                     id_site INT NOT NULL,
+                     id_region INT NOT NULL,
 
                      descripcion TEXT,
                      fecha_apertura DATE NOT NULL,
+                     dias_asignados INT DEFAULT 0,       -- Días asignados a la fecha
 
                      activo TINYINT(1) DEFAULT 1,
                      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                     CONSTRAINT fk_ots_padre
+                         FOREIGN KEY (id_ots_anterior) REFERENCES ots(id_ots),
 
                      CONSTRAINT fk_ots_cliente
                          FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
 
                      CONSTRAINT fk_ots_area
-                         FOREIGN KEY (id_area) REFERENCES area(id_area)
+                         FOREIGN KEY (id_area) REFERENCES area(id_area),
+
+                     CONSTRAINT fk_ots_proyecto
+                         FOREIGN KEY (id_proyecto) REFERENCES proyecto(id_proyecto),
+
+                     CONSTRAINT fk_ots_fase
+                         FOREIGN KEY (id_fase) REFERENCES fase(id_fase),
+
+                     CONSTRAINT fk_ots_site
+                         FOREIGN KEY (id_site) REFERENCES site(id_site),
+
+                     CONSTRAINT fk_ots_region
+                         FOREIGN KEY (id_region) REFERENCES region(id_region)
 );
+
 
 -- =====================================================
 -- 8. RELACIONES OTS
@@ -231,6 +276,7 @@ CREATE TABLE ots_trabajador (
                                 id_trabajador INT NOT NULL,
                                 rol_en_ot VARCHAR(50) NOT NULL,
                                 fecha_asignacion datetime DEFAULT current_timestamp,
+                                activo TINYINT(1) DEFAULT 1,
 
                                 PRIMARY KEY (id_ots, id_trabajador, rol_en_ot),
 

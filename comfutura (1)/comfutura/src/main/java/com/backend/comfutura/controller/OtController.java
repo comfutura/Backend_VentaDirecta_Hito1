@@ -1,5 +1,6 @@
 package com.backend.comfutura.controller;
 
+import com.backend.comfutura.dto.request.CrearOtCompletaRequest;
 import com.backend.comfutura.dto.request.OtCreateRequest;
 import com.backend.comfutura.dto.response.OtResponse;
 import com.backend.comfutura.service.OtService;
@@ -16,9 +17,14 @@ public class OtController {
 
     private final OtService otService;
 
-    @PostMapping
-    public ResponseEntity<OtResponse> createOt(@Valid @RequestBody OtCreateRequest request) {
-        OtResponse response = otService.createOt(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    // ==============================
+    // CREAR OT COMPLETA
+    // ==============================
+    @PostMapping("/completa")
+    public ResponseEntity<OtResponse> createOtCompleta(
+            @Valid @RequestBody CrearOtCompletaRequest request
+    ) {
+        OtResponse response = otService.createOtCompleta(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

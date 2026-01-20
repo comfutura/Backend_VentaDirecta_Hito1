@@ -1,22 +1,11 @@
 package com.backend.comfutura.record;
 
-//public record UserJwtDto(
-//        Integer id,
-//        String username,
-//        String email,           // correoCorporativo
-//        String nombres,
-//        String apellidos,
-//        String dni,
-//        String cargo,
-//        String area,
-//        String empresa
-//) {
-//}
-
+import java.util.List;
 
 public record UserJwtDto(
-        Integer id,
+        Integer idUsuario,
+        Integer idTrabajador,
         String username,
-        Boolean activo
-) {
-}
+        Boolean activo,
+        List<String> roles
+) {}
