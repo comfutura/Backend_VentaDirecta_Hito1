@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/dropdowns/**",   // confirma que esté aquí
+                                "/api/ordenes-compra/**",   // confirma que esté aquí
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
