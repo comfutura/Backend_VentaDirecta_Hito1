@@ -61,24 +61,19 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UserJwtDto> getCurrentUser() {
-        // La forma más limpia y recomendada en 2025
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
+
+        if (auth == null || !auth.isAuthenticated()
+                || auth.getPrincipal().equals("anonymousUser")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String username = auth.getName();
-        Usuario usuario = usuarioDetailsService.findUsuarioByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        UserJwtDto user = (UserJwtDto) auth.getPrincipal();
 
-        UserJwtDto dto = new UserJwtDto(
-                usuario.getId(),
-                usuario.getUsername(),
-                usuario.isActivo()
-        );
-
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(user);
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout() {

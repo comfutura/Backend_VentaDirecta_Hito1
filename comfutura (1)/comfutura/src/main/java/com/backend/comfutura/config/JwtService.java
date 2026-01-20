@@ -1,5 +1,7 @@
 package com.backend.comfutura.config;
 
+import com.backend.comfutura.model.Rol;
+import com.backend.comfutura.model.Trabajador;
 import com.backend.comfutura.model.Usuario;
 import com.backend.comfutura.record.UserJwtDto;
 import io.jsonwebtoken.*;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -49,22 +52,33 @@ public class JwtService {
     }
 
     public String generateToken(Usuario usuario) {
-        Map<String, Object> claims = new HashMap<>();
+
+        List<String> roles = usuario.getRoles()
+                .stream()
+                .map(Rol::getNombre)
+                .toList();
+
         UserJwtDto userData = new UserJwtDto(
                 usuario.getId(),
+                usuario.getTrabajador().getId(),
                 usuario.getUsername(),
-                usuario.isActivo()
+                usuario.isActivo(),
+                roles
         );
+
+        Map<String, Object> claims = new HashMap<>();
         claims.put("data", userData);
+        claims.put("roles", roles);
 
         return Jwts.builder()
-                .claims(claims)
-                .subject(usuario.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expirationMinutes * 60 * 1000L))
+                .setClaims(claims)
+                .setSubject(usuario.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMinutes * 60 * 1000))
                 .signWith(getSignInKey())
                 .compact();
     }
+
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);

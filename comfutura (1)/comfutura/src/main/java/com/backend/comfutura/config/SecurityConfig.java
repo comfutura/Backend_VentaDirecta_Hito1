@@ -31,7 +31,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/v3/api-docs/**",                  // ← Este con /** es clave (muy importante)
+                                "/v3/api-docs/**",
+                                "/api/dropdown/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/index.html",           // ← A veces necesario en versiones recientes
