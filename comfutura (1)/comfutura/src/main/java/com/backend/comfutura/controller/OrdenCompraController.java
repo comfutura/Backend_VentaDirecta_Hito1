@@ -5,6 +5,8 @@ import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
 import com.backend.comfutura.model.*;
 import com.backend.comfutura.service.OrdenCompraService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -58,5 +60,29 @@ public class OrdenCompraController {
         response.setObservacion(guardada.getObservacion());
 
         return response;
+    }
+
+    // -----------------------------
+    // LISTAR CON PAGINACIÓN
+    // -----------------------------
+    @GetMapping
+    public Page<OrdenCompraResponseDTO> listar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ordenCompraService.listar(PageRequest.of(page, size))
+                .map(oc -> {
+                    OrdenCompraResponseDTO response = new OrdenCompraResponseDTO();
+                    response.setIdOc(String.valueOf(oc.getIdOc()));
+                    response.setEstado(String.valueOf(oc.getEstadoOc().getIdEstadoOc()));
+                    response.setOts(String.valueOf(oc.getOts().getIdOts()));
+                    response.setMaestro(String.valueOf(oc.getMaestro().getId()));
+                    response.setProveedor(oc.getProveedor().getRazonSocial());
+                    response.setCantidad(oc.getCantidad().toPlainString());
+                    response.setCostoUnitario(oc.getCostoUnitario().toPlainString());
+                    response.setFechaOc(oc.getFechaOc().toString());
+                    response.setObservacion(oc.getObservacion());
+                    return response;
+                });
     }
 }

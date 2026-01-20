@@ -1,4 +1,4 @@
-package com.backend.comfutura.service.serviceImpl;
+        package com.backend.comfutura.service.serviceImpl;
 
 
 
@@ -6,6 +6,8 @@ import com.backend.comfutura.model.OrdenCompra;
 import com.backend.comfutura.repository.OrdenCompraRepository;
 import com.backend.comfutura.service.OrdenCompraService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +48,9 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         return ordenCompraRepository.findById(id);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<OrdenCompra> listar() {
-        return ordenCompraRepository.findAll();
+
+    public Page<OrdenCompra> listar(Pageable pageable) {
+        return ordenCompraRepository.findAll(pageable);
     }
 
     @Override
