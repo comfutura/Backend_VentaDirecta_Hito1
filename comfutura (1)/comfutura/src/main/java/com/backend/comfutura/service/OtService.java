@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface OtService {
     OtResponse createOtCompleta(CrearOtCompletaRequest request);
-    Page<OtResponse> listarPorEstado(Boolean activo, Pageable pageable);
+    Page<OtResponse> listarPorEstado(Boolean activo, String buscar, Pageable pageable);
     OtResponse obtenerPorId(Integer id);
 
 

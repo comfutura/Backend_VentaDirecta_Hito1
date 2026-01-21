@@ -38,11 +38,12 @@ public class OtController {
     }
 
     // ==============================
-    // Listado OT COMPLETO
+    // Listado OT COMPLETO + FILTRO LIKE
     // ==============================
     @GetMapping
     public ResponseEntity<Page<OtResponse>> listar(
             @RequestParam Boolean activo,
+            @RequestParam(required = false) String buscar,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -53,9 +54,10 @@ public class OtController {
         );
 
         return ResponseEntity.ok(
-                otService.listarPorEstado(activo, pageable)
+                otService.listarPorEstado(activo, buscar, pageable)
         );
     }
+
 
 
 
