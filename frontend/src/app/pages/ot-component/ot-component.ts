@@ -1,13 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
 import { DropdownItem, DropdownService } from '../../service/dropdown.service';
 import {
   OtCreateRequest,
-  OtTrabajadorRequest,
   CrearOtCompletaRequest,
   OtResponse,
   OtService
@@ -18,7 +17,7 @@ import { AuthService } from '../../service/auth.service';
   selector: 'app-create-ot',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
- templateUrl: './ot-component.html',
+  templateUrl: './ot-component.html',
   styleUrl: './ot-component.css'
 })
 export class CreateOtComponent implements OnInit {
@@ -29,16 +28,22 @@ export class CreateOtComponent implements OnInit {
   usernameLogueado: string = '—';
   trabajadorIdLogueado: number | null = null;
 
-  // Dropdowns
+  // Dropdowns principales
   clientes: DropdownItem[] = [];
-  areas: DropdownItem[] = [];           // ← se carga dinámicamente
+  areas: DropdownItem[] = [];
   proyectos: DropdownItem[] = [];
   fases: DropdownItem[] = [];
   sites: DropdownItem[] = [];
   regiones: DropdownItem[] = [];
 
-  // Trabajadores disponibles (puedes cargar desde otro endpoint)
-  trabajadoresDisponibles: DropdownItem[] = [];
+  // Nuevos dropdowns para responsables
+  jefaturasCliente: DropdownItem[] = [];
+  analistasCliente: DropdownItem[] = [];
+  coordinadoresTiCw: DropdownItem[] = [];
+  jefaturasResponsable: DropdownItem[] = [];
+  liquidadores: DropdownItem[] = [];
+  ejecutantes: DropdownItem[] = [];
+  analistasContable: DropdownItem[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -49,12 +54,37 @@ export class CreateOtComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Info del usuario logueado
     const user = this.authService.currentUser;
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
+// Carga con tipado explícito
+  this.dropdownService.getJefaturasClienteSolicitante().subscribe((d: DropdownItem[]) => {
+    this.jefaturasCliente = d || [];
+  });
 
-    // Inicializar formulario
+  this.dropdownService.getAnalistasClienteSolicitante().subscribe((d: DropdownItem[]) => {
+    this.analistasCliente = d || [];
+  });
+
+  this.dropdownService.getCoordinadoresTiCw().subscribe((d: DropdownItem[]) => {
+    this.coordinadoresTiCw = d || [];
+  });
+
+  this.dropdownService.getJefaturasResponsable().subscribe((d: DropdownItem[]) => {
+    this.jefaturasResponsable = d || [];
+  });
+
+  this.dropdownService.getLiquidador().subscribe((d: DropdownItem[]) => {
+    this.liquidadores = d || [];
+  });
+
+  this.dropdownService.getEjecutantes().subscribe((d: DropdownItem[]) => {
+    this.ejecutantes = d || [];
+  });
+
+  this.dropdownService.getAnalistasContable().subscribe((d: DropdownItem[]) => {
+    this.analistasContable = d || [];
+  });
     this.form = this.fb.group({
       idCliente: ['', Validators.required],
       idArea: ['', Validators.required],
@@ -62,71 +92,84 @@ export class CreateOtComponent implements OnInit {
       idFase: ['', Validators.required],
       idSite: ['', Validators.required],
       idRegion: ['', Validators.required],
-      descripcion: [''],
+      descripcion: [{ value: '', disabled: true }, Validators.required],
+
       fechaApertura: ['', Validators.required],
-      // Responsables (todos opcionales)
-      jefaturaClienteSolicitante: [''],
-      analistaClienteSolicitante: [''],
-      coordinadoresTiCwPextEnergia: [''],
-      jefaturaResponsable: [''],
-      liquidador: [''],
-      ejecutante: [''],
-      analistaContable: [''],
-      // Trabajadores
-      trabajadores: this.fb.array([])
+
+      // Dropdowns obligatorios u opcionales
+      idJefaturaClienteSolicitante: [null],
+      idAnalistaClienteSolicitante: [null],
+      coordinadoresTiCwPextEnergia: ['', Validators.maxLength(500)], // texto libre para varios
+      idJefaturaResponsable: [null],
+      idLiquidador: [null],
+      idEjecutante: [null],
+      idAnalistaContable: [null]
     });
 
-    // Cascada: al cambiar cliente → cargar áreas
+    // Suscripciones
+    this.form.valueChanges.subscribe(() => this.actualizarDescripcion());
+
     this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
       if (clienteId) {
-        this.cargarAreasPorCliente(clienteId);
-        this.form.get('idArea')?.reset(); // reset área cuando cambia cliente
+        this.cargarAreasPorCliente(Number(clienteId));
+        this.form.get('idArea')?.reset();
       } else {
         this.areas = [];
         this.form.get('idArea')?.reset();
       }
     });
 
-    // Cargar dropdowns iniciales
-    this.cargarDropdownsIniciales();
+    this.cargarTodosLosDropdowns();
+    this.actualizarDescripcion();
   }
 
-  // Getters útiles
   get f() { return this.form.controls; }
-  get trabajadoresArray() { return this.form.get('trabajadores') as FormArray; }
 
-  private cargarDropdownsIniciales(): void {
-    this.dropdownService.getClientes().subscribe(d => this.clientes = d);
-    this.dropdownService.getProyectos().subscribe(d => this.proyectos = d);
-    this.dropdownService.getFases().subscribe(d => this.fases = d);
-    this.dropdownService.getSites().subscribe(d => this.sites = d);
-    this.dropdownService.getRegiones().subscribe(d => this.regiones = d);
+  private cargarTodosLosDropdowns(): void {
+    // Dropdowns principales
+    this.dropdownService.getClientes().subscribe(d => this.clientes = d || []);
+    this.dropdownService.getProyectos().subscribe(d => this.proyectos = d || []);
+    this.dropdownService.getFases().subscribe(d => this.fases = d || []);
+    this.dropdownService.getSites().subscribe(d => this.sites = d || []);
+    this.dropdownService.getRegiones().subscribe(d => this.regiones = d || []);
 
-    // Si tienes endpoint para trabajadores disponibles:
-    // this.dropdownService.getTrabajadores().subscribe(d => this.trabajadoresDisponibles = d);
+    // Nuevos dropdowns de responsables
+    this.dropdownService.getJefaturasClienteSolicitante().subscribe(d => this.jefaturasCliente = d || []);
+    this.dropdownService.getAnalistasClienteSolicitante().subscribe(d => this.analistasCliente = d || []);
+    this.dropdownService.getCoordinadoresTiCw().subscribe(d => this.coordinadoresTiCw = d || []);
+    this.dropdownService.getJefaturasResponsable().subscribe(d => this.jefaturasResponsable = d || []);
+    this.dropdownService.getLiquidador().subscribe(d => this.liquidadores = d || []);
+    this.dropdownService.getEjecutantes().subscribe(d => this.ejecutantes = d || []);
+    this.dropdownService.getAnalistasContable().subscribe(d => this.analistasContable = d || []);
   }
 
   private cargarAreasPorCliente(idCliente: number): void {
     this.dropdownService.getAreasByCliente(idCliente).subscribe({
-      next: (areas) => this.areas = areas,
+      next: (areas) => this.areas = areas || [],
       error: () => {
         this.areas = [];
-        Swal.fire('Error', 'No se pudieron cargar las áreas del cliente', 'error');
+        Swal.fire('Error', 'No se pudieron cargar las áreas', 'error');
       }
     });
   }
 
-  agregarTrabajador() {
-    this.trabajadoresArray.push(
-      this.fb.group({
-        idTrabajador: ['', Validators.required],
-        rolEnOt: ['', [Validators.required, Validators.maxLength(50)]]
-      })
-    );
-  }
+  private actualizarDescripcion(): void {
+    const values = this.form.value;
 
-  eliminarTrabajador(index: number) {
-    this.trabajadoresArray.removeAt(index);
+    const proyecto = this.proyectos.find(p => p.id === Number(values.idProyecto))?.label || '';
+    const area     = this.areas.find(a => a.id === Number(values.idArea))?.label || '';
+    const siteId   = values.idSite ? String(values.idSite) : '';
+    const site     = this.sites.find(s => s.id === Number(values.idSite))?.label || '';
+
+    let desc = [proyecto, area, siteId, site]
+      .filter(Boolean)
+      .join(' - ');
+
+    if (!desc.trim()) {
+      desc = 'Completar campos principales para generar descripción';
+    }
+
+    this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
   }
 
   onSubmit(): void {
@@ -154,29 +197,30 @@ export class CreateOtComponent implements OnInit {
       idFase: Number(values.idFase),
       idSite: Number(values.idSite),
       idRegion: Number(values.idRegion),
-      descripcion: values.descripcion?.trim() || undefined,
-      fechaApertura: values.fechaApertura,
-      diasAsignados: values.diasAsignados ?? 0,
+      descripcion: values.descripcion?.trim() || '',
+      diasAsignados: 0,
       idOtsAnterior: null,
 
-      jefaturaClienteSolicitante: values.jefaturaClienteSolicitante?.trim() || undefined,
-      analistaClienteSolicitante: values.analistaClienteSolicitante?.trim() || undefined,
-      coordinadoresTiCwPextEnergia: values.coordinadoresTiCwPextEnergia?.trim() || undefined,
-      jefaturaResponsable: values.jefaturaResponsable?.trim() || undefined,
-      liquidador: values.liquidador?.trim() || undefined,
-      ejecutante: values.ejecutante?.trim() || undefined,
-      analistaContable: values.analistaContable?.trim() || undefined
+      // IDs de las tablas maestras (FKs)
+      idJefaturaClienteSolicitante: values.idJefaturaClienteSolicitante || null,
+      idAnalistaClienteSolicitante: values.idAnalistaClienteSolicitante || null,
+      idCoordinadorTiCw: null, // ← si solo permites uno, usa el dropdown; si varios → ver nota abajo
+      idJefaturaResponsable: values.idJefaturaResponsable || null,
+      idLiquidador: values.idLiquidador || null,
+      idEjecutante: values.idEjecutante || null,
+      idAnalistaContable: values.idAnalistaContable || null,
+
+      // Campo de texto libre para múltiples coordinadores (como antes)
+      coordinadoresTiCwPextEnergia: values.coordinadoresTiCwPextEnergia?.trim() || null
     };
 
-    const trabajadores: OtTrabajadorRequest[] = (values.trabajadores || []).map((t: any) => ({
-      idTrabajador: Number(t.idTrabajador),
-      rolEnOt: t.rolEnOt.trim()
-    }));
+    // Nota: si quieres que coordinadores sea solo dropdown (uno), elimina el campo de texto
+    // y usa idCoordinadorTiCw: values.idCoordinadorTiCw || null
 
     const payload: CrearOtCompletaRequest = {
       ot: otPayload,
-      trabajadores,
-      detalles: [] // ← si implementas detalles después, mapea aquí
+      trabajadores: [],          // ← ya no se usa
+      detalles: []
     };
 
     this.otService.crearOtCompleta(payload).subscribe({
@@ -184,8 +228,7 @@ export class CreateOtComponent implements OnInit {
         Swal.fire({
           icon: 'success',
           title: '¡Orden creada!',
-          html: `OT <strong>#${res.ot}</strong> registrada exitosamente<br>
-                 <small>Fecha: ${res.fechaApertura}</small>`,
+          html: `OT <strong>#${res.ot}</strong> registrada exitosamente`,
           timer: 3500,
           showConfirmButton: false
         });
@@ -195,7 +238,7 @@ export class CreateOtComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error al crear OT',
-          text: err.message || 'Ocurrió un problema inesperado. Intenta nuevamente.'
+          text: err.error?.message || 'Ocurrió un problema inesperado'
         });
       },
       complete: () => this.loading = false
@@ -204,8 +247,8 @@ export class CreateOtComponent implements OnInit {
 
   resetForm(): void {
     this.form.reset();
-    this.trabajadoresArray.clear();
     this.submitted = false;
     this.areas = [];
+    this.actualizarDescripcion();
   }
 }
