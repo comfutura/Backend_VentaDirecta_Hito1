@@ -19,7 +19,6 @@ public class OtCreateRequest {
     private LocalDate fechaApertura;
 
     private String descripcion;
-    private Integer diasAsignados;
 
     private Integer idJefaturaClienteSolicitante;
     private Integer idAnalistaClienteSolicitante;

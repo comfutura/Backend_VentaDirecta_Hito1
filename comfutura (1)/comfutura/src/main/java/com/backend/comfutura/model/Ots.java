@@ -87,9 +87,6 @@ public class Ots {
     @JoinColumn(name = "id_analista_contable")
     private AnalistaContable analistaContable;
 
-    @Column(name = "dias_asignados")
-    private Integer diasAsignados = 0;
-
     @Column(name = "activo")
     private Boolean activo = true;
 
