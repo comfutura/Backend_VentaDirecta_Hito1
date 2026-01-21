@@ -72,7 +72,6 @@ public class OtServiceImpl implements OtService {
                 .site(site)
                 .region(region)
                 .descripcion(request.getDescripcion())
-                .diasAsignados(request.getDiasAsignados() != null ? request.getDiasAsignados() : 0)
                 .fechaApertura(request.getFechaApertura())
 
                 // ─── Los 7 campos: crea instancia vacía y setea solo el ID ───
@@ -175,7 +174,6 @@ public class OtServiceImpl implements OtService {
                 .idOts(ots.getIdOts())
                 .ot(ots.getOt())
                 .descripcion(ots.getDescripcion())
-                .diasAsignados(ots.getDiasAsignados())
                 .activo(ots.getActivo())
                 .fechaCreacion(ots.getFechaCreacion())
                 .build();
