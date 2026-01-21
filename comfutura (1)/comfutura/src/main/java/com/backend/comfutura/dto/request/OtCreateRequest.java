@@ -20,7 +20,7 @@ public class OtCreateRequest {
 
     private String descripcion;
     private Integer diasAsignados;
-    // ─── CAMPOS FALTANTES (los 7 que necesitas) ───
+
     private Integer idJefaturaClienteSolicitante;
     private Integer idAnalistaClienteSolicitante;
     private Integer idCoordinadorTiCw;

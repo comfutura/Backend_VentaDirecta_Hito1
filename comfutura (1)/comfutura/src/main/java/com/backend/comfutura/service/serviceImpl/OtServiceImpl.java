@@ -62,17 +62,66 @@ public class OtServiceImpl implements OtService {
 
         Ots ots = Ots.builder()
                 .ot(nuevaOt)
-                .otsAnterior(request.getIdOtsAnterior())
+                .otsAnterior(request.getIdOtsAnterior())  // Integer o null – ya está bien como está
                 .cliente(cliente)
                 .area(area)
                 .proyecto(proyecto)
                 .fase(fase)
-                .fechaApertura(request.getFechaApertura())
                 .site(site)
                 .region(region)
                 .descripcion(request.getDescripcion())
-                .diasAsignados(
-                        request.getDiasAsignados() != null ? request.getDiasAsignados() : 0
+                .diasAsignados(request.getDiasAsignados() != null ? request.getDiasAsignados() : 0)
+                .fechaApertura(request.getFechaApertura())
+
+                // ─── Los 7 campos: crea instancia vacía y setea solo el ID ───
+                .jefaturaClienteSolicitante(
+                        request.getIdJefaturaClienteSolicitante() != null
+                                ? JefaturaClienteSolicitante.builder()
+                                .id(request.getIdJefaturaClienteSolicitante())
+                                .build()
+                                : null
+                )
+                .analistaClienteSolicitante(
+                        request.getIdAnalistaClienteSolicitante() != null
+                                ? AnalistaClienteSolicitante.builder()
+                                .id(request.getIdAnalistaClienteSolicitante())
+                                .build()
+                                : null
+                )
+                .coordinadorTiCw(
+                        request.getIdCoordinadorTiCw() != null
+                                ? CoordinadorTiCwPextEnergia.builder()  // ← usa el nombre correcto de la clase
+                                .id(request.getIdCoordinadorTiCw())
+                                .build()
+                                : null
+                )
+                .jefaturaResponsable(
+                        request.getIdJefaturaResponsable() != null
+                                ? JefaturaResponsable.builder()
+                                .id(request.getIdJefaturaResponsable())
+                                .build()
+                                : null
+                )
+                .liquidador(
+                        request.getIdLiquidador() != null
+                                ? Liquidador.builder()
+                                .id(request.getIdLiquidador())
+                                .build()
+                                : null
+                )
+                .ejecutante(
+                        request.getIdEjecutante() != null
+                                ? Ejecutante.builder()
+                                .id(request.getIdEjecutante())
+                                .build()
+                                : null
+                )
+                .analistaContable(
+                        request.getIdAnalistaContable() != null
+                                ? AnalistaContable.builder()
+                                .id(request.getIdAnalistaContable())
+                                .build()
+                                : null
                 )
                 .activo(true)
                 .build();

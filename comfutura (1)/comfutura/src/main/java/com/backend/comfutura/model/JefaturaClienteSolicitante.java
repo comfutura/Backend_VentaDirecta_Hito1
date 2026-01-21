@@ -10,7 +10,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
 public class JefaturaClienteSolicitante {
 
     @Id
@@ -22,4 +21,5 @@ public class JefaturaClienteSolicitante {
 
     @Column(nullable = false)
     private Boolean activo = true;
+
 }
