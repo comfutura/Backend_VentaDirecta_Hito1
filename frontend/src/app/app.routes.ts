@@ -14,35 +14,64 @@ import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compr
 import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
+
+  /* =========================
+   * PUBLIC
+   * ========================= */
   {
     path: 'login',
     component: LoginComponent,
     data: { renderMode: 'server' }
   },
+
+  /* =========================
+   * PRIVATE (LAYOUT)
+   * ========================= */
   {
     path: '',
     component: LayoutComponent,
     canActivateChild: [authGuard],
     data: { renderMode: 'server' },
     children: [
+
+      /* Dashboard */
       {
         path: 'dashboard',
         component: DashboardComponent,
         data: { renderMode: 'server' }
       },
 
-      // 🔥 TODO EL MÓDULO OT EN CLIENT
+      /* =========================
+       * OT → FULL CLIENT (CRUD)
+       * ========================= */
       {
         path: 'ot',
-        data: { renderMode: 'client' }, // 👈 CLAVE FINAL
+        data: { renderMode: 'client' },
         children: [
-          { path: '', component: OtsComponent },
-          { path: 'nuevo', component: FormOtsComponent },
-          { path: 'editar/:id', component: FormOtsComponent },
-          { path: ':id', component: OtDetailComponent }
+          {
+            path: '',
+            component: OtsComponent,
+            data: { renderMode: 'client' }
+          },
+          {
+            path: 'nuevo',
+            component: FormOtsComponent,
+            data: { renderMode: 'client' }
+          },
+          {
+            path: 'editar/:id',
+            component: FormOtsComponent,
+            data: { renderMode: 'client' }
+          },
+          {
+            path: ':id',
+            component: OtDetailComponent,
+            data: { renderMode: 'client' }
+          }
         ]
       },
 
+      /* Otras páginas SSR */
       {
         path: 'site',
         component: SiteComponent,
@@ -65,6 +94,10 @@ export const routes: Routes = [
       }
     ]
   },
+
+  /* =========================
+   * FALLBACK
+   * ========================= */
   {
     path: '**',
     redirectTo: 'login'
