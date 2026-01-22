@@ -92,7 +92,15 @@ public class DropdownController {
     public ResponseEntity<List<DropdownDTO>> getAnalistasContable() {
         return ResponseEntity.ok(dropdownService.getAnalistasContable());
     }
+    @GetMapping("/maestro-codigos")
+    public ResponseEntity<List<DropdownDTO>> getMaestroCodigos() {
+        return ResponseEntity.ok(dropdownService.getMaestroCodigos());
+    }
 
+    @GetMapping("/proveedores")
+    public ResponseEntity<List<DropdownDTO>> getProveedores() {
+        return ResponseEntity.ok(dropdownService.getProveedores());
+    }
     // Opcional: endpoint que devuelve TODOS los dropdowns necesarios para el formulario de OT
     @GetMapping("/form-ots")
     public ResponseEntity<?> getAllDropdownsForOtForm() {

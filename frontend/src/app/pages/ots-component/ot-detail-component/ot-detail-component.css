@@ -22,3 +22,31 @@
 .bi {
   vertical-align: -0.125em;
 }
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15) !important;
+}
+
+.rounded-4 {
+  border-radius: 1.5rem !important;
+}
+
+.badge.fs-5 {
+  font-size: 1.25rem !important;
+}
+
+/* Estados en timeline */
+.bg-success-light { background-color: #d4edda !important; }
+.text-success-dark { color: #155724 !important; }

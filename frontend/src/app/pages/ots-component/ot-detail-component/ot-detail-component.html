@@ -1,206 +1,218 @@
-<div class="container py-5">
-  <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+<div class="container-fluid py-4 py-md-5">
+  <div class="card shadow-xl border-0 rounded-4 overflow-hidden bg-white">
 
     <!-- Header -->
-    <div class="card-header bg-gradient-primary text-white py-4 px-5">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <h4 class="mb-0 fw-semibold">
-          <i class="bi bi-file-earmark-text me-2"></i>
-          Orden de Trabajo #{{ ot?.ot ?? '—' }}
-        </h4>
+    <div class="card-header bg-gradient-primary text-white py-4 py-md-5 px-4 px-md-5">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
+        <div>
+          <h3 class="mb-1 fw-bold">
+            <i class="bi bi-file-earmark-check me-3"></i>
+            Orden de Trabajo #{{ ot?.ot ?? '——' }}
+          </h3>
+          <p class="mb-0 opacity-85 fs-5">
+            {{ ot?.descripcion || 'Sin descripción' | slice:0:120 }}{{ (ot?.descripcion?.length ?? 0) > 120 ? '...' : '' }}
+          </p>
+        </div>
 
-        <ng-container *ngIf="ot">
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <span class="badge fs-6 px-4 py-2"
-                  [ngClass]="ot.activo ? 'bg-success' : 'bg-danger'">
-              {{ ot.activo ? 'Activa' : 'Inactiva' }}
-            </span>
+        <div class="d-flex flex-wrap gap-3">
+          <span class="badge fs-5 px-4 py-2 fw-semibold"
+                [ngClass]="ot?.activo ? 'bg-success' : 'bg-danger'">
+            {{ ot?.activo ? 'Activa' : 'Inactiva' }}
+          </span>
 
-            <span class="badge bg-info fs-6 px-3 py-2">
-              {{ ot.diasAsignados }} día{{ ot.diasAsignados !== 1 ? 's' : '' }} transcurridos
-            </span>
+          <span class="badge bg-dark fs-5 px-4 py-2 fw-semibold">
+            {{ ot?.diasAsignados ?? '—' }} día{{ (ot?.diasAsignados ?? 0) !== 1 ? 's' : '' }}
+          </span>
+        </div>
+      </div>
+    </div>
 
-            <span class="badge bg-secondary fs-6 px-3 py-2" *ngIf="ot.estadoOt">
-              {{ ot.estadoOt }}
-            </span>
+    <!-- Timeline / Progreso de estados -->
+    <div class="bg-light border-bottom px-4 px-md-5 py-4">
+      <h5 class="text-center fw-bold mb-4 text-primary">
+        <i class="bi bi-diagram-3 me-2"></i> Flujo de la Orden de Trabajo
+      </h5>
 
-            <span class="badge bg-dark fs-6 px-3 py-2" *ngIf="ot.idOtsAnterior">
-              Anterior: #{{ ot.idOtsAnterior }}
-            </span>
+      <div class="d-flex flex-nowrap overflow-auto pb-2" style="gap: 0.75rem;">
+        <ng-container *ngFor="let estado of estados; let i = index">
+          <div class="text-center position-relative flex-grow-1" style="min-width: 140px;">
+            <!-- Línea de conexión -->
+            <div class="position-absolute top-50 start-0 end-0 translate-middle-y"
+                 [ngClass]="{
+                   'bg-success': i < currentEstadoIndex,
+                   'bg-primary': i === currentEstadoIndex,
+                   'bg-secondary opacity-50': i > currentEstadoIndex
+                 }"
+                 style="height: 6px; z-index: 1;"></div>
+
+            <!-- Círculo -->
+            <div class="position-relative d-inline-block mb-2" style="z-index: 2;">
+              <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow"
+                   [ngClass]="getEstadoClass(i)"
+                   style="width: 52px; height: 52px; border: 4px solid white;">
+                <i class="bi" [ngClass]="getIconoEstado(i)"></i>
+              </div>
+            </div>
+
+            <div class="small fw-semibold"
+                 [ngClass]="{
+                   'text-success': i < currentEstadoIndex,
+                   'text-primary fw-bold': i === currentEstadoIndex,
+                   'text-muted': i > currentEstadoIndex
+                 }">
+              {{ estado }}
+            </div>
+
+            <!-- Número -->
+            <div class="badge bg-white text-dark border mt-1 fs-6 px-2 py-1"
+                 style="font-size: 0.75rem;">
+              {{ i + 1 }}
+            </div>
           </div>
         </ng-container>
       </div>
     </div>
 
-    <!-- Contenido -->
+    <!-- Contenido principal -->
     <div class="card-body p-4 p-md-5">
-
-      <!-- Loading -->
-      <div *ngIf="loading" class="text-center py-5 my-5">
-        <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status">
-          <span class="visually-hidden">Cargando...</span>
+      <ng-container *ngIf="loading">
+        <div class="text-center py-5 my-5">
+          <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status"></div>
+          <h5 class="mt-4 text-muted">Cargando detalle de la OT...</h5>
         </div>
-        <p class="mt-3 text-muted fs-5">Obteniendo detalle completo de la OT...</p>
-      </div>
+      </ng-container>
 
-      <!-- Contenido real -->
       <ng-container *ngIf="!loading && ot">
-        <div class="row g-4">
+        <div class="row g-4 g-lg-5">
 
-          <!-- Columna Izquierda - Información principal -->
-          <div class="col-lg-6">
-            <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">
-              <i class="bi bi-info-circle-fill me-2"></i> Información Principal
-            </h5>
+          <!-- Columna 1: Datos básicos + Fechas -->
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <h5 class="card-title fw-bold text-primary mb-4">
+                  <i class="bi bi-info-square me-2"></i> Datos Básicos
+                </h5>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">ID Interno:</div>
-              <div class="col-7 col-sm-8">{{ ot.idOts }}</div>
-            </div>
+                <dl class="row mb-0">
+                  <dt class="col-5 text-muted fw-semibold">ID Interno</dt>
+                  <dd class="col-7">{{ ot.idOts }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Descripción:</div>
-              <div class="col-7 col-sm-8">{{ ot.descripcion || 'No especificada' }}</div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Cliente</dt>
+                  <dd class="col-7">{{ ot.clienteRazonSocial || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Fecha Apertura:</div>
-              <div class="col-7 col-sm-8">
-                {{ ot.fechaApertura ? (ot.fechaApertura | date:'dd/MM/yyyy') : '—' }}
-              </div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Área</dt>
+                  <dd class="col-7">{{ ot.areaNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Fecha Creación:</div>
-              <div class="col-7 col-sm-8">
-                {{ ot.fechaCreacion ? (ot.fechaCreacion | date:'dd/MM/yyyy HH:mm') : '—' }}
-              </div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Proyecto</dt>
+                  <dd class="col-7">{{ ot.proyectoNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Cliente:</div>
-              <div class="col-7 col-sm-8">{{ ot.clienteRazonSocial || '—' }} (ID: {{ ot.idCliente || '—' }})</div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Fase</dt>
+                  <dd class="col-7">{{ ot.faseNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Área:</div>
-              <div class="col-7 col-sm-8">{{ ot.areaNombre || '—' }} (ID: {{ ot.idArea || '—' }})</div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Site</dt>
+                  <dd class="col-7">{{ ot.siteNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Proyecto:</div>
-              <div class="col-7 col-sm-8">{{ ot.proyectoNombre || '—' }} (ID: {{ ot.idProyecto || '—' }})</div>
-            </div>
-
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Fase:</div>
-              <div class="col-7 col-sm-8">{{ ot.faseNombre || '—' }} (ID: {{ ot.idFase || '—' }})</div>
-            </div>
-
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Site (Código):</div>
-              <div class="col-7 col-sm-8">{{ ot.siteNombre || '—' }} (ID: {{ ot.idSite || '—' }})</div>
-            </div>
-
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Región:</div>
-              <div class="col-7 col-sm-8">{{ ot.regionNombre || '—' }} (ID: {{ ot.idRegion || '—' }})</div>
-            </div>
-
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Estado OT:</div>
-              <div class="col-7 col-sm-8">
-                <span class="badge fs-6 px-3 py-2"
-                      [ngClass]="{
-                        'bg-success': ot.estadoOt === 'FINALIZADO',
-                        'bg-warning text-dark': ot.estadoOt?.includes('EN PROCESO') || ot.estadoOt?.includes('EN LIQUIDACION'),
-                        'bg-info': ot.estadoOt === 'PENDIENTE' || ot.estadoOt === 'ASIGNACION' || ot.estadoOt === 'ASIGNADO',
-                        'bg-secondary': ot.estadoOt === 'CANCELADO' || ot.estadoOt === 'ANULADO',
-                        'bg-primary': true
-                      }">
-                  {{ ot.estadoOt || 'Sin estado definido' }}
-                </span>
+                  <dt class="col-5 text-muted fw-semibold">Región</dt>
+                  <dd class="col-7">{{ ot.regionNombre || '—' }}</dd>
+                </dl>
               </div>
             </div>
           </div>
 
-          <!-- Columna Derecha - Responsables -->
-          <div class="col-lg-6">
-            <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">
-              <i class="bi bi-person-badge-fill me-2"></i> Responsables
-            </h5>
+          <!-- Columna 2: Fechas y Estado -->
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <h5 class="card-title fw-bold text-primary mb-4">
+                  <i class="bi bi-calendar-event me-2"></i> Fechas y Estado
+                </h5>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Creador (ID {{ ot.idCreador || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.creadorNombre || '—' }}</div>
+                <dl class="row mb-0">
+                 <!-- Fechas -->
+<dt class="col-5 text-muted fw-semibold">Apertura</dt>
+<dd class="col-7">{{ ot.fechaApertura ? (ot.fechaApertura | date:'dd/MM/yyyy') : '—' }}</dd>
+
+<dt class="col-5 text-muted fw-semibold">Creación</dt>
+<dd class="col-7">{{ ot.fechaCreacion ? (ot.fechaCreacion | date:'dd/MM/yyyy HH:mm') : '—' }}</dd>
+
+<!-- Estado -->
+<dd class="col-7">
+  <span class="badge fs-5 px-4 py-2 fw-semibold"
+        [ngClass]="getEstadoBadgeClass(ot.estadoOt)">
+    {{ ot.estadoOt || 'Sin estado' }}
+  </span>
+</dd>
+                </dl>
+              </div>
             </div>
+          </div>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Jefatura Cliente (ID {{ ot.idJefaturaClienteSolicitante || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.jefaturaClienteSolicitanteNombre || '—' }}</div>
-            </div>
+          <!-- Columna 3: Responsables -->
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <h5 class="card-title fw-bold text-primary mb-4">
+                  <i class="bi bi-people-fill me-2"></i> Responsables
+                </h5>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Analista Cliente (ID {{ ot.idAnalistaClienteSolicitante || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.analistaClienteSolicitanteNombre || '—' }}</div>
-            </div>
+                <dl class="row mb-0">
+                  <dt class="col-5 text-muted fw-semibold">Creador</dt>
+                  <dd class="col-7">{{ ot.creadorNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Coord. TI/CW (ID {{ ot.idCoordinadorTiCw || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.coordinadorTiCwNombre || '—' }}</div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Jefatura Cliente</dt>
+                  <dd class="col-7">{{ ot.jefaturaClienteSolicitanteNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Jefatura Responsable (ID {{ ot.idJefaturaResponsable || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.jefaturaResponsableNombre || '—' }}</div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Analista Cliente</dt>
+                  <dd class="col-7">{{ ot.analistaClienteSolicitanteNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Liquidador (ID {{ ot.idLiquidador || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.liquidadorNombre || '—' }}</div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Coord. TI/CW</dt>
+                  <dd class="col-7">{{ ot.coordinadorTiCwNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Ejecutante (ID {{ ot.idEjecutante || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.ejecutanteNombre || '—' }}</div>
-            </div>
+                  <dt class="col-5 text-muted fw-semibold">Jefatura Resp.</dt>
+                  <dd class="col-7">{{ ot.jefaturaResponsableNombre || '—' }}</dd>
 
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Analista Contable (ID {{ ot.idAnalistaContable || '—' }}):</div>
-              <div class="col-7 col-sm-8">{{ ot.analistaContableNombre || '—' }}</div>
+                  <dt class="col-5 text-muted fw-semibold">Liquidador</dt>
+                  <dd class="col-7">{{ ot.liquidadorNombre || '—' }}</dd>
+
+                  <dt class="col-5 text-muted fw-semibold">Ejecutante</dt>
+                  <dd class="col-7">{{ ot.ejecutanteNombre || '—' }}</dd>
+
+                  <dt class="col-5 text-muted fw-semibold">Analista Contable</dt>
+                  <dd class="col-7">{{ ot.analistaContableNombre || '—' }}</dd>
+                </dl>
+              </div>
             </div>
           </div>
 
         </div>
       </ng-container>
 
-      <!-- Error / No encontrado -->
+      <!-- No encontrado -->
       <ng-container *ngIf="!loading && !ot">
-        <div class="alert alert-warning text-center py-5 my-5 border-0 shadow-sm rounded-3">
-          <i class="bi bi-exclamation-triangle-fill fs-1 text-warning d-block mb-3"></i>
-          <h5 class="mb-3">No se encontró la orden de trabajo</h5>
-          <p class="text-muted mb-4">
-            El ID proporcionado no existe, fue eliminado o no tienes permisos para verlo.
+        <div class="alert alert-warning text-center py-5 my-5 shadow rounded-4 border-0">
+          <i class="bi bi-exclamation-triangle-fill fs-1 text-warning mb-3 d-block"></i>
+          <h4 class="mb-3">Orden de Trabajo no encontrada</h4>
+          <p class="lead text-muted mb-4">
+            El ID no existe, fue eliminada o no tienes permisos para verla.
           </p>
-          <button class="btn btn-outline-primary px-4" (click)="volver()">
+          <button class="btn btn-outline-primary btn-lg px-5" (click)="volver()">
             Volver al listado
           </button>
         </div>
       </ng-container>
-
     </div>
 
     <!-- Footer -->
-    <div class="card-footer bg-light border-0 py-4 text-center">
-      <button class="btn btn-outline-secondary px-5 py-2 fw-semibold me-3" (click)="volver()">
-        <i class="bi bi-arrow-left me-2"></i>Volver al listado
-      </button>
-
-      <ng-container *ngIf="ot">
-        <button class="btn btn-primary px-5 py-2 fw-semibold" (click)="editarOt()">
-          <i class="bi bi-pencil-square me-2"></i>Editar OT
+    <div class="card-footer bg-light border-0 py-4 px-5 text-center">
+      <div class="d-flex justify-content-center gap-4 flex-wrap">
+        <button class="btn btn-outline-secondary btn-lg px-5 py-3 fw-semibold" (click)="volver()">
+          <i class="bi bi-arrow-left me-2"></i> Volver al listado
         </button>
-      </ng-container>
+
+        <button *ngIf="ot" class="btn btn-primary btn-lg px-5 py-3 fw-semibold" (click)="editarOt()">
+          <i class="bi bi-pencil-square me-2"></i> Editar OT
+        </button>
+      </div>
     </div>
 
   </div>

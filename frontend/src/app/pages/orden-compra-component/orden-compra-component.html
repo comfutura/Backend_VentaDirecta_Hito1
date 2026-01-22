@@ -1,136 +1,119 @@
+<!-- orden-compra-component.html -->
 <div class="container-fluid py-4">
+
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">
       <i class="bi bi-cart-check me-2"></i>Órdenes de Compra
     </h2>
-    <button class="btn btn-primary" (click)="cargarOrdenes()">
-      <i class="bi bi-arrow-repeat me-2"></i>Actualizar
-    </button>
+    <div>
+      <button class="btn btn-success me-2" (click)="abrirModalCrear()">
+        <i class="bi bi-plus-lg me-1"></i>Nueva Orden
+      </button>
+      <button class="btn btn-outline-secondary" (click)="cargarOrdenes()">
+        <i class="bi bi-arrow-repeat"></i>
+      </button>
+    </div>
   </div>
 
-  <!-- Filtro y búsqueda -->
+  <!-- Filtro -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="row g-3 align-items-end">
-        <div class="col-md-8 col-lg-6">
+        <div class="col-md-6 col-lg-5">
           <div class="input-group">
-            <span class="input-group-text bg-light border-0">
-              <i class="bi bi-search"></i>
-            </span>
-            <input type="text" class="form-control border-0 shadow-sm"
-                   placeholder="Buscar por OT, proveedor, material, estado o observación..."
-                   [(ngModel)]="searchTerm" (input)="onSearchChange()"
-                   [disabled]="isLoading">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Buscar OT, proveedor, material, estado..."
+                   [(ngModel)]="searchTerm" (input)="onSearchChange()" [disabled]="isLoading">
           </div>
         </div>
-        <div class="col-md-4 col-lg-3 text-md-end">
-          <small class="text-muted">
-            Mostrando {{ filteredOrdenes.length }} de {{ ordenes.length }} registros
-          </small>
+        <div class="col-md-6 col-lg-7 text-md-end">
+          <small class="text-muted">Mostrando {{filteredOrdenes.length}} de {{ordenes.length}}</small>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Loading -->
+  <!-- Loading / Error -->
   <div *ngIf="isLoading" class="text-center my-5 py-5">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">Cargando...</span>
-    </div>
-    <p class="mt-3 text-muted">Cargando órdenes de compra...</p>
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+    <p class="mt-3">Cargando...</p>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="errorMessage && !isLoading" class="alert alert-danger alert-dismissible fade show" role="alert">
-    {{ errorMessage }}
-    <button type="button" class="btn-close" (click)="errorMessage = null"></button>
+  <div *ngIf="errorMessage && !isLoading" class="alert alert-danger">
+    {{errorMessage}}
   </div>
 
   <!-- Tabla -->
-  <div class="card shadow-sm" *ngIf="!isLoading">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>OT / Descripción</th>
-              <th>Material (Código)</th>
-              <th>Proveedor</th>
-              <th>Estado</th>
-              <th class="text-end">Cantidad</th>
-              <th class="text-end">Costo Unit.</th>
-              <th class="text-end">Total</th>
-              <th>Fecha</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let oc of filteredOrdenes">
-              <td class="fw-bold">{{ oc.idOc }}</td>
-              <td>
-                <div class="text-truncate" style="max-width: 220px;" title="{{ oc.otsNombre }}">
-                  {{ oc.otsNombre }}
-                </div>
-              </td>
-              <td>{{ oc.maestroCodigo }}</td>
-              <td>{{ oc.proveedorNombre }}</td>
-              <td>
-                <span class="badge rounded-pill px-3 py-2 fs-6"
-                      [ngClass]="getEstadoClass(oc.estadoOcNombre)">
-                  {{ oc.estadoOcNombre }}
-                </span>
-              </td>
-              <td class="text-end">{{ oc.cantidad | number:'1.2-2' }}</td>
-              <td class="text-end">{{ oc.costoUnitario | currency:'PEN ':'symbol':'1.2-2' }}</td>
-              <td class="text-end fw-bold">
-                {{ getTotal(oc) | currency:'PEN ':'symbol':'1.2-2' }}
-              </td>
-              <td>{{ oc.fechaOc | date:'dd/MM/yyyy HH:mm' }}</td>
-              <td>
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-primary" title="Ver detalle">
-                    <i class="bi bi-eye"></i>
-                  </button>
-                  <button class="btn btn-outline-danger" (click)="eliminarOrden(oc.idOc)" title="Eliminar">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <tr *ngIf="filteredOrdenes.length === 0 && !isLoading">
-              <td colspan="10" class="text-center py-5 text-muted">
-                <i class="bi bi-exclamation-circle fs-1 d-block mb-3"></i>
-                No se encontraron órdenes de compra
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="card shadow-sm" *ngIf="!isLoading && !errorMessage">
+    <div class="table-responsive">
+      <table class="table table-hover table-striped align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>OT / Descripción</th>
+            <th>Material</th>
+            <th>Proveedor</th>
+            <th>Estado</th>
+            <th class="text-end">Cant.</th>
+            <th class="text-end">C. Unit.</th>
+            <th class="text-end">Total</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let oc of filteredOrdenes">
+            <td class="fw-bold">{{oc.idOc}}</td>
+            <td class="text-truncate" style="max-width: 240px;" [title]="oc.otsNombre">{{oc.otsNombre}}</td>
+            <td>{{oc.maestroCodigo}}</td>
+            <td>{{oc.proveedorNombre}}</td>
+            <td>
+              <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(oc.estadoOcNombre)">
+                {{oc.estadoOcNombre}}
+              </span>
+            </td>
+            <td class="text-end">{{oc.cantidad | number:'1.0-0'}}</td>
+            <td class="text-end">{{oc.costoUnitario | currency:'PEN ':'symbol':'1.2-2'}}</td>
+            <td class="text-end fw-bold">{{getTotal(oc) | currency:'PEN ':'symbol':'1.2-2'}}</td>
+            <td>{{oc.fechaOc | date:'dd/MM/yyyy HH:mm'}}</td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-info"    (click)="verDetalle(oc)"    title="Ver detalle"><i class="bi bi-eye"></i></button>
+                <button class="btn btn-outline-primary" (click)="editarOrden(oc)"   title="Editar"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-outline-warning" (click)="toggleEstado(oc)"  title="Cambiar estado"><i class="bi bi-arrow-left-right"></i></button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredOrdenes.length === 0">
+            <td colspan="10" class="text-center py-5 text-muted">
+              No se encontraron órdenes de compra
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Paginación -->
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center" *ngIf="pageData">
-      <div>
-        Página {{ currentPage + 1 }} de {{ totalPages }}
-      </div>
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center" *ngIf="pageData && totalPages > 1">
+      <div>Página {{currentPage + 1}} de {{totalPages}}</div>
       <nav>
         <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" [class.disabled]="currentPage === 0">
-            <button class="page-link" (click)="irAPagina(0)">Primera</button>
-          </li>
-          <li class="page-item" [class.disabled]="currentPage === 0">
-            <button class="page-link" (click)="irAPagina(currentPage - 1)">Anterior</button>
-          </li>
-          <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
-            <button class="page-link" (click)="irAPagina(currentPage + 1)">Siguiente</button>
-          </li>
-          <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
-            <button class="page-link" (click)="irAPagina(totalPages - 1)">Última</button>
-          </li>
+          <li class="page-item" [class.disabled]="currentPage === 0"><button class="page-link" (click)="irAPagina(0)">Primera</button></li>
+          <li class="page-item" [class.disabled]="currentPage === 0"><button class="page-link" (click)="irAPagina(currentPage-1)">Anterior</button></li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages-1"><button class="page-link" (click)="irAPagina(currentPage+1)">Siguiente</button></li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages-1"><button class="page-link" (click)="irAPagina(totalPages-1)">Última</button></li>
         </ul>
       </nav>
     </div>
   </div>
+
+  <!-- Modal Formulario -->
+  <app-form-orden-compra-component
+    *ngIf="showFormModal"
+    [ocToEdit]="selectedOc"
+    [isEdit]="isEditMode"
+    (onClose)="showFormModal = false"
+    (onSubmitted)="onFormSubmitted($event)">
+  </app-form-orden-compra-component>
+
 </div>

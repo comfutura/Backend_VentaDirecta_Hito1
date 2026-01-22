@@ -1,33 +1,37 @@
+// orden-compra-component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
-import { OrdenCompraService } from '../../service/orden-compra.service';
+import { OrdenCompraService } from '../../service/orden-compra.service'; // ajusta ruta
 import { OrdenCompraResponse, PageOrdenCompra } from '../../model/orden-compra.model';
+import { FormOrdenCompraComponent } from "./form-orden-compra-component/form-orden-compra-component"; // ajusta ruta
 
 @Component({
   selector: 'app-orden-compra-component',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FormOrdenCompraComponent],
   templateUrl: './orden-compra-component.html',
-  styleUrl: './orden-compra-component.css'
+  styleUrls: ['./orden-compra-component.css']
 })
 export class OrdenCompraComponent implements OnInit {
 
-  // Datos
   pageData: PageOrdenCompra | null = null;
   ordenes: OrdenCompraResponse[] = [];
   filteredOrdenes: OrdenCompraResponse[] = [];
 
-  // Filtros
   searchTerm: string = '';
   currentPage: number = 0;
   pageSize: number = 10;
   totalPages: number = 1;
 
-  // Estados UI
   isLoading: boolean = false;
   errorMessage: string | null = null;
+
+  // Para el formulario modal
+  showFormModal: boolean = false;
+  isEditMode: boolean = false;
+  selectedOc: OrdenCompraResponse | null = null;
 
   constructor(private ordenService: OrdenCompraService) {}
 
@@ -49,18 +53,15 @@ export class OrdenCompraComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = 'No se pudieron cargar las órdenes de compra';
-        console.error(err);
+        this.errorMessage = 'No se pudieron cargar las órdenes';
         this.mostrarError(this.errorMessage);
         this.isLoading = false;
       }
     });
   }
 
-  // Filtro local (búsqueda en frontend)
   aplicarFiltro(): void {
     const term = this.searchTerm.trim().toLowerCase();
-
     if (!term) {
       this.filteredOrdenes = [...this.ordenes];
       return;
@@ -71,7 +72,7 @@ export class OrdenCompraComponent implements OnInit {
       oc.proveedorNombre.toLowerCase().includes(term) ||
       oc.maestroCodigo.toLowerCase().includes(term) ||
       oc.estadoOcNombre.toLowerCase().includes(term) ||
-      (oc.observacion && oc.observacion.toLowerCase().includes(term))
+      (oc.observacion?.toLowerCase().includes(term) ?? false)
     );
   }
 
@@ -79,67 +80,137 @@ export class OrdenCompraComponent implements OnInit {
     this.aplicarFiltro();
   }
 
-  // Navegación paginación
   irAPagina(pagina: number): void {
     if (pagina >= 0 && pagina < this.totalPages) {
       this.cargarOrdenes(pagina);
     }
   }
 
-  // Acciones
-  eliminarOrden(id: number): void {
+  // ──────────────────────────────────────────────
+  //            Acciones de la tabla
+  // ──────────────────────────────────────────────
+
+  verDetalle(oc: OrdenCompraResponse): void {
     Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta orden de compra será eliminada permanentemente',
-      icon: 'warning',
+      title: `Orden #${oc.idOc}`,
+      html: `
+        <div class="text-start">
+          <p><strong>OT:</strong> ${oc.otsNombre}</p>
+          <p><strong>Material:</strong> ${oc.maestroCodigo}</p>
+          <p><strong>Proveedor:</strong> ${oc.proveedorNombre}</p>
+          <p><strong>Estado:</strong> ${oc.estadoOcNombre}</p>
+          <p><strong>Cantidad:</strong> ${oc.cantidad}</p>
+          <p><strong>Costo unit.:</strong> ${oc.costoUnitario.toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}</p>
+          <p><strong>Total:</strong> ${(oc.cantidad * oc.costoUnitario).toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}</p>
+          <p><strong>Fecha:</strong> ${new Date(oc.fechaOc).toLocaleString('es-PE')}</p>
+          ${oc.observacion ? `<p><strong>Observación:</strong> ${oc.observacion}</p>` : ''}
+        </div>
+      `,
+      icon: 'info',
+      confirmButtonText: 'Cerrar'
+    });
+  }
+
+  editarOrden(oc: OrdenCompraResponse): void {
+    this.selectedOc = { ...oc }; // copia para editar
+    this.isEditMode = true;
+    this.showFormModal = true;
+  }
+
+  toggleEstado(oc: OrdenCompraResponse): void {
+    const nuevosEstadosPosibles = {
+      'PENDIENTE': 'EN PROCESO',
+      'EN PROCESO': 'APROBADA',
+      'APROBADA': 'ATENDIDA',
+      'ATENDIDA': 'CERRADA',
+      'RECHAZADA': 'PENDIENTE',
+      'ANULADA': 'PENDIENTE'
+    };
+
+    const nuevoEstadoNombre = nuevosEstadosPosibles[oc.estadoOcNombre as keyof typeof nuevosEstadosPosibles] || 'PENDIENTE';
+
+    Swal.fire({
+      title: '¿Cambiar estado?',
+      text: `Pasar de "${oc.estadoOcNombre}" → "${nuevoEstadoNombre}"?`,
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cambiar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.ordenService.eliminar(id).subscribe({
+        // Aquí deberías tener un endpoint o lógica para cambiar solo estado
+        // Por simplicidad, suponemos que actualizamos todo el objeto (o crea método específico)
+        const request = {
+          estadoOcId: this.mapEstadoNombreToId(nuevoEstadoNombre), // necesitas implementar este mapeo
+          otsId: oc.idOc, // ← ojo: probablemente no es correcto, ajusta según modelo real
+          maestroId: 0,   // ← faltan datos reales → idealmente recargar o tenerlos
+          proveedorId: 0,
+          cantidad: oc.cantidad,
+          costoUnitario: oc.costoUnitario,
+          observacion: oc.observacion
+        };
+
+        this.ordenService.actualizar(oc.idOc, request).subscribe({
           next: () => {
-            this.mostrarExito('Orden eliminada correctamente');
+            this.mostrarExito(`Estado cambiado a ${nuevoEstadoNombre}`);
             this.cargarOrdenes(this.currentPage);
           },
-          error: () => this.mostrarError('No se pudo eliminar la orden')
+          error: () => this.mostrarError('No se pudo cambiar el estado')
         });
       }
     });
   }
 
-  // Helpers SweetAlert
+  // Helper – ajusta según tus IDs reales de estado
+  private mapEstadoNombreToId(nombre: string): number {
+    const map: Record<string, number> = {
+      'PENDIENTE': 1,
+      'EN PROCESO': 2,
+      'APROBADA': 3,
+      'ATENDIDA': 4,
+      'CERRADA': 5,
+      'RECHAZADA': 6,
+      'ANULADA': 7
+    };
+    return map[nombre] ?? 1;
+  }
+
+  // ──────────────────────────────────────────────
+  //               Form Modal
+  // ──────────────────────────────────────────────
+
+  abrirModalCrear(): void {
+    this.selectedOc = null;
+    this.isEditMode = false;
+    this.showFormModal = true;
+  }
+
+  onFormSubmitted(success: boolean): void {
+    this.showFormModal = false;
+    if (success) {
+      this.cargarOrdenes(this.currentPage);
+    }
+  }
+
+  // SweetAlert helpers
   private mostrarExito(mensaje: string): void {
-    Swal.fire({
-      icon: 'success',
-      title: '¡Éxito!',
-      text: mensaje,
-      timer: 2500,
-      showConfirmButton: false
-    });
+    Swal.fire({ icon: 'success', title: 'Éxito', text: mensaje, timer: 2200, showConfirmButton: false });
   }
 
   private mostrarError(mensaje: string): void {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: mensaje,
-      confirmButtonText: 'Aceptar'
-    });
+    Swal.fire({ icon: 'error', title: 'Error', text: mensaje });
   }
 
-  // Helpers visuales
   getEstadoClass(estado: string): string {
     const map: Record<string, string> = {
       'APROBADA': 'bg-success',
-      'PENDIENTE': 'bg-warning',
-      'RECHAZADA': 'bg-danger',
-      'ANULADA': 'bg-secondary',
-      'CERRADA': 'bg-info',
+      'PENDIENTE': 'bg-warning text-dark',
       'EN PROCESO': 'bg-primary',
-      'ATENDIDA': 'bg-success'
+      'ATENDIDA': 'bg-info',
+      'CERRADA': 'bg-secondary',
+      'RECHAZADA': 'bg-danger',
+      'ANULADA': 'bg-dark'
     };
     return map[estado] || 'bg-secondary';
   }

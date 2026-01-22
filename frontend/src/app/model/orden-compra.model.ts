@@ -12,20 +12,28 @@ export interface OrdenCompraRequest {
 
 export interface OrdenCompraResponse {
   idOc: number;
+
+  estadoOcId:   number;
   estadoOcNombre: string;
-  otsNombre: string;          // ya viene concatenado: "OT: 20250001 - Backbone fibra..."
+
+  otsId:        number;
+  otsNombre:    string;
+
+  maestroId:    number;
   maestroCodigo: string;
+
+  proveedorId:  number;
   proveedorNombre: string;
+  // ──────────────────────────────────────────────────────────────────────
+
   cantidad: number;
   costoUnitario: number;
-  fechaOc: string;            // ISO string desde backend (LocalDateTime)
+  fechaOc: string;
   observacion?: string;
 
-  // Opcional: calcular total en frontend si lo necesitas
-  total?: number;             // cantidad * costoUnitario (puedes calcularlo)
+  total?: number;  // opcional
 }
 
-// Para la paginación (respuesta del backend)
 export interface PageOrdenCompra {
   content: OrdenCompraResponse[];
   pageable: {
