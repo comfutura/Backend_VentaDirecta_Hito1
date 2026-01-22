@@ -21,7 +21,6 @@ export class LayoutComponent {
   isCollapsed  = false;
   isMobileOpen = false;
 
-  // ── Datos del usuario desde JWT ───────────────────────────────
   get username(): string {
     return this.authService.currentUser?.username ?? 'Usuario';
   }
@@ -31,12 +30,21 @@ export class LayoutComponent {
     return name ? name.charAt(0).toUpperCase() : 'U';
   }
 
-  // Opcional: si tienes roles en el JWT
-  get isAdmin(): boolean {
-    return this.authService.currentUser?.roles?.includes('ADMIN') ?? false;
+  get currentUser() {
+    return this.authService.currentUser;
   }
 
-  // ── Métodos del sidebar ───────────────────────────────────────
+  // Opcional: helper para mostrar roles
+  get mainRole(): string {
+    const roles = this.currentUser?.roles;
+    if (!roles || roles.length === 0) return '';
+    return roles[0]; // o roles.find(r => r === 'ADMIN') ?? roles[0]
+  }
+
+  get isAdmin(): boolean {
+    return this.currentUser?.roles?.includes('ADMIN') ?? false;
+  }
+
   toggleCollapse() {
     this.isCollapsed = !this.isCollapsed;
   }

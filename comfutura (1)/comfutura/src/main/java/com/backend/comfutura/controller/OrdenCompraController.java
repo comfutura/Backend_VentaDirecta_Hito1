@@ -86,14 +86,27 @@ public class OrdenCompraController {
         return ResponseEntity.noContent().build();
     }
 
-    // ===== Mapeo entidad a DTO =====
     private OrdenCompraResponseDTO mapToResponse(OrdenCompra oc) {
         return OrdenCompraResponseDTO.builder()
                 .idOc(oc.getIdOc())
-                .estadoOcNombre(oc.getEstadoOc().getNombre())       // OK
-                .otsNombre("OT: " + oc.getOts().getOt() + " - " + oc.getOts().getDescripcion()) // Combina OT y descripción
-                .maestroCodigo(oc.getMaestro().getCodigo())       // OK
-                .proveedorNombre(oc.getProveedor().getRazonSocial())
+
+                // Estado
+                .estadoOcId(oc.getEstadoOc() != null ? oc.getEstadoOc().getIdEstadoOc() : null)
+                .estadoOcNombre(oc.getEstadoOc() != null ? oc.getEstadoOc().getNombre() : null)
+
+                // OTS
+                .otsId(oc.getOts() != null ? oc.getOts().getIdOts() : null)
+                .otsNombre(oc.getOts() != null
+                        ? "OT: " + oc.getOts().getOt() + " - " + oc.getOts().getDescripcion()
+                        : null)
+
+                // Maestro / Material
+                .maestroId(oc.getMaestro() != null ? oc.getMaestro().getId() : null)
+                .maestroCodigo(oc.getMaestro() != null ? oc.getMaestro().getCodigo() : null)
+
+                // Proveedor
+                .proveedorId(oc.getProveedor() != null ? oc.getProveedor().getId() : null)
+                .proveedorNombre(oc.getProveedor() != null ? oc.getProveedor().getRazonSocial() : null)
 
                 .cantidad(oc.getCantidad())
                 .costoUnitario(oc.getCostoUnitario())

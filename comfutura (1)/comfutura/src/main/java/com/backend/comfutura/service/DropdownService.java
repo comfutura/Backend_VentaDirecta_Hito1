@@ -23,4 +23,8 @@ public interface DropdownService {
     List<DropdownDTO> getLiquidador();
     List<DropdownDTO> getEjecutantes();
     List<DropdownDTO> getAnalistasContable();
+
+    List<DropdownDTO> getMaestroCodigos();
+
+    List<DropdownDTO> getProveedores();
 }

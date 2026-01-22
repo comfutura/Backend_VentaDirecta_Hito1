@@ -78,6 +78,9 @@ export class DropdownService {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/analistas-contable`);
   }
 
+  getMaestroCodigo(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/maestro-codigos`);
+  }
   // =============================
   // ORDEN DE COMPRA
   // =============================
@@ -86,9 +89,6 @@ export class DropdownService {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/ots`);
   }
 
-  getMaestroCodigos(): Observable<DropdownItem[]> {
-    return this.http.get<DropdownItem[]>(`${this.apiUrl}/maestro-codigos`);
-  }
 
   getProveedores(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/proveedores`);
@@ -131,18 +131,15 @@ export class DropdownService {
     });
   }
 
-  /**
-   * Carga TODOS los dropdowns necesarios para crear una Orden de Compra
-   */
-  loadOrdenCompraDropdowns(): Observable<{
-    ots: DropdownItem[];
-    maestros: DropdownItem[];
-    proveedores: DropdownItem[];
-  }> {
-    return forkJoin({
-      ots: this.getOtsActivas(),
-      maestros: this.getMaestroCodigos(),
-      proveedores: this.getProveedores()
-    });
-  }
+loadOrdenCompraDropdowns(): Observable<{
+  ots: DropdownItem[];
+  maestros: DropdownItem[];     // ← agregado
+  proveedores: DropdownItem[];
+}> {
+  return forkJoin({
+    ots: this.getOtsActivas(),
+    maestros: this.getMaestroCodigo(),    // ← agregado
+    proveedores: this.getProveedores()
+  });
+}
 }

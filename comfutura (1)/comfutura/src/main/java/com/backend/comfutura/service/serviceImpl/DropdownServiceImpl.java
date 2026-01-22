@@ -22,6 +22,8 @@ public class DropdownServiceImpl implements DropdownService {
     private final RegionRepository regionRepository;
     private final OtsRepository otsRepository;
     private final TrabajadorRepository trabajadorRepository;
+    private final MaestroCodigoRepository maestroCodigoRepository;
+    private final ProveedorRepository proveedorRepository;
 
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
@@ -63,7 +65,29 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(f -> new DropdownDTO(f.getIdFase(), f.getNombre()))
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<DropdownDTO> getMaestroCodigos() {
+        return maestroCodigoRepository.findByActivoTrueOrderByCodigoAsc()
+                .stream()
+                .map(mc -> new DropdownDTO(
+                        mc.getId(),
+                        mc.getCodigo() + " - " + mc.getDescripcion()  // formato recomendado
+                        // Alternativa más simple: solo mc.getCodigo()
+                ))
+                .collect(Collectors.toList());
+    }
 
+    @Override
+    public List<DropdownDTO> getProveedores() {
+        return proveedorRepository.findByActivoTrueOrderByRazonSocialAsc()
+                .stream()
+                .map(p -> new DropdownDTO(
+                        p.getId(),
+                        p.getRazonSocial() + " (" + p.getRuc() + ")"   // formato útil
+                        // Alternativa más simple: solo p.getRazonSocial()
+                ))
+                .collect(Collectors.toList());
+    }
     @Override
     public List<DropdownDTO> getSites() {
         return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()

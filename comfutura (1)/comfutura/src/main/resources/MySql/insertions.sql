@@ -270,3 +270,104 @@ INSERT IGNORE INTO cliente_area (id_cliente, id_area, activo) VALUES
     ((SELECT id_cliente FROM cliente WHERE razon_social = 'STL TELECOM'), (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),     1),
     ((SELECT id_cliente FROM cliente WHERE razon_social = 'STL TELECOM'), (SELECT id_area FROM area WHERE nombre = 'TI'),          1),
     ((SELECT id_cliente FROM cliente WHERE razon_social = 'STL TELECOM'), (SELECT id_area FROM area WHERE nombre = 'CIERRE'),      1);
+
+INSERT INTO unidad_medida (codigo, descripcion) VALUES
+                                                    ('UND',  'Unidad'),
+                                                    ('M',    'Metro(s)'),
+                                                    ('M2',   'Metro cuadrado'),
+                                                    ('M3',   'Metro cúbico'),
+                                                    ('KG',   'Kilogramo(s)'),
+                                                    ('HORA', 'Hora(s)'),
+                                                    ('DIA',  'Día(s)'),
+                                                    ('MES',  'Mes(es)'),
+                                                    ('JORN', 'Jornada(s)'),
+                                                    ('PZA',  'Pieza(s)'),
+                                                    ('KIT',  'Kit / Set'),
+                                                    ('GLN',  'Galón');
+
+INSERT INTO maestro_codigo (codigo, descripcion, id_unidad_medida, precio_base) VALUES
+                                                                                    ('S000001', 'Cable fibra óptica monomodo 12 hilos ADSS',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'M'),  3.80),
+
+                                                                                    ('S000002', 'Poste de concreto 9 metros clase B',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'UND'),  285.00),
+
+                                                                                    ('S000003', 'Caja de derivación FTTH IP65 8 puertos',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'UND'),  45.50),
+
+                                                                                    ('S000004', 'Mano de obra tendido aéreo fibra óptica (incluye herrajes)',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'M'),  8.90),
+
+                                                                                    ('S000005', 'Mano de obra instalación poste concreto (excavación + izado)',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'UND'),  320.00),
+
+                                                                                    ('S000006', 'Energía temporal generador 20 KVA (incluye combustible y operador)',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'HORA'),  65.00),
+
+                                                                                    ('S000007', 'Revisión y mantenimiento UPS 10 KVA',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'UND'),  450.00),
+
+                                                                                    ('S000008', 'Kit de empalmes fibra óptica (splices + protección)',
+                                                                                     (SELECT id_unidad_medida FROM unidad_medida WHERE codigo = 'KIT'),  18.75);
+
+INSERT INTO orden_compra (
+    id_estado_oc,
+    id_ots,
+    id_maestro,
+    id_proveedor,
+    cantidad,
+    costo_unitario,
+    observacion
+) VALUES
+      -- OC para OT 20250001 (Claro - backbone fibra)
+      (
+          (SELECT id_estado_oc FROM estado_oc WHERE nombre = 'APROBADA' LIMIT 1),
+      (SELECT id_ots FROM ots WHERE ot = 20250001 LIMIT 1),
+      (SELECT id_maestro FROM maestro_codigo WHERE codigo = 'S000001' LIMIT 1),
+      (SELECT id_proveedor FROM proveedor WHERE ruc = '20100123456' LIMIT 1),  -- TECNOFIBRA
+    850.00,
+    3.80,
+    'Suministro cable ADSS para backbone edificio corporativo'
+    ),
+
+    (
+        (SELECT id_estado_oc FROM estado_oc WHERE nombre = 'EN PROCESO' LIMIT 1),
+        (SELECT id_ots FROM ots WHERE ot = 20250001 LIMIT 1),
+        (SELECT id_maestro FROM maestro_codigo WHERE codigo = 'S000004' LIMIT 1),
+        (SELECT id_proveedor FROM proveedor WHERE ruc = '20100123456' LIMIT 1),
+        1200.00,
+        8.90,
+        'Tendido aéreo tramo 1 - 2do piso'
+    ),
+
+    -- OC para OT 20250002 (Claro - postes y tendido aéreo)
+    (
+        (SELECT id_estado_oc FROM estado_oc WHERE nombre = 'PENDIENTE' LIMIT 1),
+        (SELECT id_ots FROM ots WHERE ot = 20250002 LIMIT 1),
+        (SELECT id_maestro FROM maestro_codigo WHERE codigo = 'S000002' LIMIT 1),
+        (SELECT id_proveedor FROM proveedor WHERE ruc = '20512345678' LIMIT 1),  -- ELECTROREDES
+        18.00,
+        285.00,
+        'Reemplazo postes dañados por vientos fuertes zona sur'
+    ),
+
+    -- OC para OT 20250003 (Entel - mantenimiento energético)
+    (
+        (SELECT id_estado_oc FROM estado_oc WHERE nombre = 'ATENDIDA' LIMIT 1),
+        (SELECT id_ots FROM ots WHERE ot = 20250003 LIMIT 1),
+        (SELECT id_maestro FROM maestro_codigo WHERE codigo = 'S000006' LIMIT 1),
+        (SELECT id_proveedor FROM proveedor WHERE ruc = '20604567890' LIMIT 1),  -- INFRAESTRUCTURA ANDINA
+        96.00,
+        65.00,
+        'Alquiler generador durante corte programado de 4 días'
+    ),
+
+    (
+        (SELECT id_estado_oc FROM estado_oc WHERE nombre = 'CERRADA' LIMIT 1),
+        (SELECT id_ots FROM ots WHERE ot = 20250003 LIMIT 1),
+        (SELECT id_maestro FROM maestro_codigo WHERE codigo = 'S000007' LIMIT 1),
+        (SELECT id_proveedor FROM proveedor WHERE ruc = '20100123456' LIMIT 1),
+        2.00,
+        450.00,
+        'Mantenimiento preventivo UPS estación norte'
+    );

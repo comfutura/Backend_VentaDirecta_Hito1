@@ -42,7 +42,58 @@ export class OtDetailComponent implements OnInit {
       }
     });
   }
+// En la clase OtDetailComponent
 
+estados: string[] = [
+  'ASIGNACION',
+  'PRESUPUESTO ENVIADO',
+  'CREACION DE OC',
+  'EN_EJECUCION',
+  'EN_LIQUIDACION',
+  'EN_FACTURACION',
+  'FINALIZADO',
+  'CANCELADA'
+];
+
+get currentEstadoIndex(): number {
+  if (!this.ot?.estadoOt) return -1;
+  const idx = this.estados.indexOf(this.ot.estadoOt);
+  return idx >= 0 ? idx : -1;
+}
+
+getEstadoClass(index: number): string {
+  if (index < this.currentEstadoIndex) return 'bg-success text-white';
+  if (index === this.currentEstadoIndex) return 'bg-primary text-white shadow-lg';
+  if (this.ot?.estadoOt === 'CANCELADA' && index === this.estados.length - 1) {
+    return 'bg-danger text-white';
+  }
+  return 'bg-secondary text-white opacity-75';
+}
+
+getIconoEstado(index: number): string {
+  const icons = [
+    'bi bi-person-plus',           // ASIGNACION
+    'bi bi-envelope-paper',        // PRESUPUESTO ENVIADO
+    'bi bi-cart-check',            // CREACION DE OC
+    'bi bi-gear-wide-connected',   // EN_EJECUCION
+    'bi bi-calculator',            // EN_LIQUIDACION
+    'bi bi-receipt-cutoff',        // EN_FACTURACION
+    'bi bi-check2-circle',         // FINALIZADO
+    'bi bi-x-octagon'              // CANCELADA
+  ];
+  return icons[index] || 'bi bi-question-circle';
+}
+
+getEstadoBadgeClass(estado?: string | null): string {
+  if (!estado) return 'bg-secondary';
+
+  if (estado === 'FINALIZADO') return 'bg-success';
+  if (estado === 'CANCELADA') return 'bg-danger';
+  if (estado.includes('EN_') || estado === 'CREACION DE OC') return 'bg-warning text-dark';
+  if (estado === 'PRESUPUESTO ENVIADO' || estado === 'ASIGNACION') return 'bg-info';
+
+  return 'bg-primary';
+}
   private mostrarError(mensaje: string): void {
     Swal.fire({
       icon: 'error',

@@ -10,6 +10,7 @@ import { LayoutComponent } from './component/layaout-component/layaout-component
 import { SiteComponent } from './pages/site-component/site-component';   // ← nuevo import
 import { AnalistaClienteSolicitanteComponent } from './pages/analista-cliente-solicitante-component/analista-cliente-solicitante-component';
 import { JefaturaClienteSolicitanteComponent } from './pages/jefatura-cliente-solicitante-component/jefatura-cliente-solicitante-component';
+import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compra-component';
 
 export const routes: Routes = [
   {
@@ -45,6 +46,10 @@ export const routes: Routes = [
       {
         path: 'jefatura-cliente-solicitante',
         component: JefaturaClienteSolicitanteComponent,          // ← gestión de sitios (listado + CRUD)
+      },
+      {
+        path: 'orden-compra',
+        component: OrdenCompraComponent,          // ← gestión de sitios (listado + CRUD)
       }
     ]
   },
