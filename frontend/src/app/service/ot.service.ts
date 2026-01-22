@@ -3,9 +3,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { environment } from '../../environment';
 
-import { CrearOtCompletaRequest, OtResponse, OtFullDetailResponse, Page } from '../model/ots'; // ← ajusta la carpeta si es necesario
+import { environment } from '../../environment';
+import { CrearOtCompletaRequest, OtResponse, Page } from '../model/ots'; // ajusta la carpeta si es necesario
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +17,7 @@ export class OtService {
 
   /**
    * Crea o actualiza una OT completa (upsert)
+   * Devuelve OtResponse completo con todos los campos mapeados
    */
   saveOtCompleta(payload: CrearOtCompletaRequest): Observable<OtResponse> {
     return this.http.post<OtResponse>(`${this.apiUrl}/completa`, payload).pipe(
@@ -25,7 +26,7 @@ export class OtService {
   }
 
   /**
-   * Lista paginada de OTs (básica)
+   * Lista paginada de OTs (ahora devuelve OtResponse completo)
    */
   listarOts(
     activo?: boolean | null,
@@ -48,18 +49,8 @@ export class OtService {
   }
 
   /**
-   * Obtiene el detalle COMPLETO de una OT buscando por su número legible (ej: 1456)
-   * Este es el endpoint principal cuando el usuario ingresa el número de OT
-   */
-  getOtByNumeroOt(ot: number): Observable<OtFullDetailResponse> {
-    const params = new HttpParams().set('ot', ot.toString());
-    return this.http.get<OtFullDetailResponse>(`${this.apiUrl}/by-ot`, { params }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Obtiene una OT básica por su ID interno (id_ots)
+   * Obtiene el detalle completo de una OT por ID interno
+   * Devuelve OtResponse (ahora incluye todos los campos: nombres, códigos, etc.)
    */
   getOtById(id: number): Observable<OtResponse> {
     return this.http.get<OtResponse>(`${this.apiUrl}/${id}`).pipe(
@@ -68,11 +59,11 @@ export class OtService {
   }
 
   /**
-   * Obtiene los datos necesarios para editar una OT (solo IDs + campos editables)
-   * Útil para precargar un formulario de edición
+   * Obtiene el detalle completo de una OT por número legible (ej: 20250001)
+   * Devuelve OtResponse completo
    */
-  getOtParaEdicion(id: number): Observable<OtFullDetailResponse> {   // ← puedes cambiar a OtFullResponse si prefieres la versión sin nombres
-    return this.http.get<OtFullDetailResponse>(`${this.apiUrl}/${id}/full`).pipe(
+  getOtByNumeroOt(ot: number): Observable<OtResponse> {
+    return this.http.get<OtResponse>(`${this.apiUrl}/numero/${ot}`).pipe(
       catchError(this.handleError)
     );
   }
@@ -85,11 +76,7 @@ export class OtService {
       catchError(this.handleError)
     );
   }
-getOtDetalleCompleto(id: number): Observable<OtFullDetailResponse> {
-  return this.http.get<OtFullDetailResponse>(`${this.apiUrl}/${id}`).pipe(
-    catchError(this.handleError)
-  );
-}
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocurrió un error desconocido';
 

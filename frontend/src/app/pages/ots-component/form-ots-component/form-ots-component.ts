@@ -1,14 +1,15 @@
+// src/app/pages/form-ots/form-ots.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, tap } from 'rxjs';
 import Swal from 'sweetalert2';
-import { forkJoin } from 'rxjs';
 
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
 import { AuthService } from '../../../service/auth.service';
 import { OtService } from '../../../service/ot.service';
-import { CrearOtCompletaRequest, OtCreateRequest, OtResponse, OtFullDetailResponse } from '../../../model/ots';
+import { CrearOtCompletaRequest, OtCreateRequest, OtResponse } from '../../../model/ots';
 
 @Component({
   selector: 'app-form-ots-component',
@@ -60,19 +61,17 @@ export class FormOtsComponent implements OnInit {
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-    // Detectar si es edición
+    // Detectar modo edición
     const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam && !isNaN(Number(idParam))) {
-      this.otId = Number(idParam);
-      this.isEditMode = true;
-      this.cargarDatosEdicion(this.otId);
-    } else {
-      this.isEditMode = false;
-      this.loading = false;
-    }
+    this.isEditMode = !!idParam && !isNaN(Number(idParam));
+    this.otId = this.isEditMode ? Number(idParam) : null;
 
-    // Cargar catálogos independientes
-    this.cargarDropdownsComunes();
+    // Cargar todo lo necesario
+    if (this.isEditMode && this.otId) {
+      this.cargarDatosParaEdicion(this.otId);
+    } else {
+      this.cargarDropdownsParaCreacion();
+    }
 
     // Suscripciones reactivas
     this.suscribirCambiosFormulario();
@@ -90,7 +89,7 @@ export class FormOtsComponent implements OnInit {
       idSite: [null, Validators.required],
       idRegion: [null, Validators.required],
       descripcion: ['', Validators.required],
-      fechaApertura: [hoy, [Validators.required]],
+      fechaApertura: [hoy, Validators.required],
 
       idJefaturaClienteSolicitante: [null],
       idAnalistaClienteSolicitante: [null],
@@ -110,7 +109,7 @@ export class FormOtsComponent implements OnInit {
   }
 
   private suscribirCambiosFormulario(): void {
-    // Cascada: áreas según cliente seleccionado
+    // Cascada: áreas según cliente
     this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
       const areaCtrl = this.form.get('idArea');
       if (clienteId) {
@@ -131,8 +130,67 @@ export class FormOtsComponent implements OnInit {
     }
   }
 
-  private cargarDropdownsComunes(): void {
+  private cargarDropdownsParaCreacion(): void {
+    this.cargarTodosLosCatalogos().subscribe({
+      next: () => {
+        this.loading = false;
+      },
+      error: () => {
+        Swal.fire('Error', 'No se pudieron cargar los catálogos necesarios', 'error');
+        this.loading = false;
+      }
+    });
+  }
+
+  private cargarDatosParaEdicion(id: number): void {
     forkJoin({
+      ot: this.otService.getOtById(id),
+      catalogs: this.cargarTodosLosCatalogos()
+    }).subscribe({
+      next: ({ ot }) => {
+        this.otNumber = ot.ot?.toString() ?? null;
+
+        this.form.patchValue({
+          idOts: ot.idOts,
+          idCliente: this.findIdByLabel(this.clientes, ot.clienteRazonSocial),
+          idArea: this.findIdByLabel(this.areas, ot.areaNombre),
+          idProyecto: this.findIdByLabel(this.proyectos, ot.proyectoNombre),
+          idFase: this.findIdByLabel(this.fases, ot.faseNombre),
+          idSite: this.findIdByLabel(this.sites, ot.siteNombre),
+          idRegion: this.findIdByLabel(this.regiones, ot.regionNombre),
+          descripcion: ot.descripcion || '',
+          fechaApertura: ot.fechaApertura ? ot.fechaApertura.split('T')[0] : '',
+          idJefaturaClienteSolicitante: this.findIdByLabel(this.jefaturasCliente, ot.jefaturaClienteSolicitante),
+          idAnalistaClienteSolicitante: this.findIdByLabel(this.analistasCliente, ot.analistaClienteSolicitante),
+          idCoordinadorTiCw: this.findIdByLabel(this.coordinadoresTiCw, ot.coordinadorTiCw),
+          idJefaturaResponsable: this.findIdByLabel(this.jefaturasResponsable, ot.jefaturaResponsable),
+          idLiquidador: this.findIdByLabel(this.liquidadores, ot.liquidador),
+          idEjecutante: this.findIdByLabel(this.ejecutantes, ot.ejecutante),
+          idAnalistaContable: this.findIdByLabel(this.analistasContable, ot.analistaContable),
+          idOtsAnterior: null  // Si lo necesitas, agrégalo al backend
+        });
+
+        // Forzar recarga de áreas si hay cliente seleccionado
+        const clienteId = this.form.get('idCliente')?.value;
+        if (clienteId) {
+          this.cargarAreasPorCliente(clienteId);
+        }
+
+        this.loading = false;
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo cargar la información de la OT para edición',
+        });
+        this.router.navigate(['/ot']);
+      }
+    });
+  }
+
+  private cargarTodosLosCatalogos() {
+    return forkJoin({
       clientes: this.dropdownService.getClientes(),
       proyectos: this.dropdownService.getProyectos(),
       fases: this.dropdownService.getFases(),
@@ -145,8 +203,8 @@ export class FormOtsComponent implements OnInit {
       liquidadores: this.dropdownService.getLiquidador(),
       ejecutantes: this.dropdownService.getEjecutantes(),
       analistasCont: this.dropdownService.getAnalistasContable()
-    }).subscribe({
-      next: (data) => {
+    }).pipe(
+      tap(data => {
         this.clientes = data.clientes || [];
         this.proyectos = data.proyectos || [];
         this.fases = data.fases || [];
@@ -159,74 +217,30 @@ export class FormOtsComponent implements OnInit {
         this.liquidadores = data.liquidadores || [];
         this.ejecutantes = data.ejecutantes || [];
         this.analistasContable = data.analistasCont || [];
-
-        // Si estamos en edición, ya cargamos áreas después
-        if (!this.isEditMode) {
-          this.loading = false;
-        }
-      },
-      error: () => {
-        Swal.fire('Error', 'No se pudieron cargar los catálogos necesarios', 'error');
-        this.loading = false;
-      }
-    });
-  }
-
-  private cargarDatosEdicion(id: number): void {
-    this.otService.getOtDetalleCompleto(id).subscribe({   // ← nombre corregido
-      next: (ot: OtFullDetailResponse) => {
-        this.otNumber = ot.ot?.toString() ?? null;
-
-        this.form.patchValue({
-          idOts: ot.idOts,
-          idCliente: ot.idCliente,
-          idArea: ot.idArea,
-          idProyecto: ot.idProyecto,
-          idFase: ot.idFase,
-          idSite: ot.idSite,
-          idRegion: ot.idRegion,
-          descripcion: ot.descripcion || '',
-          fechaApertura: ot.fechaApertura ? ot.fechaApertura.split('T')[0] : '',
-          idJefaturaClienteSolicitante: ot.idJefaturaClienteSolicitante,
-          idAnalistaClienteSolicitante: ot.idAnalistaClienteSolicitante,
-          idCoordinadorTiCw: ot.idCoordinadorTiCw,
-          idJefaturaResponsable: ot.idJefaturaResponsable,
-          idLiquidador: ot.idLiquidador,
-          idEjecutante: ot.idEjecutante,
-          idAnalistaContable: ot.idAnalistaContable,
-          idOtsAnterior: ot.idOtsAnterior
-        });
-
-        // Cargar áreas del cliente seleccionado
-        if (ot.idCliente) {
-          this.cargarAreasPorCliente(ot.idCliente);
-        }
-
-        this.loading = false;
-      },
-      error: () => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo cargar la información de la OT',
-          confirmButtonText: 'Aceptar'
-        });
-        this.router.navigate(['/ot']);
-      }
-    });
+      })
+    );
   }
 
   private cargarAreasPorCliente(idCliente: number): void {
     this.dropdownService.getAreasByCliente(idCliente).subscribe({
       next: (areas) => {
         this.areas = areas || [];
-        // Si estamos en edición y ya hay área seleccionada, se mantiene
+        // Si ya hay un valor de área en el form y no está en la nueva lista → limpiarlo
+        const areaActual = this.form.get('idArea')?.value;
+        if (areaActual && !this.areas.some(a => a.id === areaActual)) {
+          this.form.get('idArea')?.setValue(null, { emitEvent: false });
+        }
       },
       error: () => {
         this.areas = [];
         Swal.fire('Atención', 'No se pudieron cargar las áreas del cliente', 'warning');
       }
     });
+  }
+
+  private findIdByLabel(items: DropdownItem[], label?: string | null): number | null {
+    if (!label) return null;
+    return items.find(item => item.label === label)?.id ?? null;
   }
 
   private actualizarDescripcion(): void {
@@ -314,7 +328,8 @@ export class FormOtsComponent implements OnInit {
 
       const payload: CrearOtCompletaRequest = {
         ot: otPayload,
-        trabajadores: []   // ← aquí irían los trabajadores si los agregas después
+        trabajadores: [],   // ← implementa si manejas asignación de trabajadores
+        // detalles: []     // si usas ítems/materiales
       };
 
       this.otService.saveOtCompleta(payload).subscribe({
@@ -327,7 +342,7 @@ export class FormOtsComponent implements OnInit {
             timerProgressBar: true,
             showConfirmButton: false
           });
-          setTimeout(() => this.router.navigate(['/ot', 'detail', res.idOts]), 2800);
+          setTimeout(() => this.router.navigate(['/ot', res.idOts]), 2800);
         },
         error: (err) => {
           Swal.fire({

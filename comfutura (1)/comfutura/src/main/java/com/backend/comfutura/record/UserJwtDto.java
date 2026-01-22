@@ -7,5 +7,5 @@ public record UserJwtDto(
         Integer idTrabajador,
         String username,
         Boolean activo,
-        List<String> roles
+        List<String> nivel
 ) {}

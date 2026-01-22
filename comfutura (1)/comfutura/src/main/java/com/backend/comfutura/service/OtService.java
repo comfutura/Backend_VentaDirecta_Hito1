@@ -1,7 +1,8 @@
 package com.backend.comfutura.service;
 
-import com.backend.comfutura.dto.request.CrearOtCompletaRequest;
-import com.backend.comfutura.dto.response.OtFullDetailResponse;
+import com.backend.comfutura.dto.request.OtCreateRequest;
+import com.backend.comfutura.dto.response.OtDetailResponse;
+import com.backend.comfutura.dto.response.OtFullResponse;
 import com.backend.comfutura.dto.response.OtResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,14 +11,16 @@ public interface OtService {
 
     Page<OtResponse> listarOts(Boolean activo, Pageable pageable);
 
-    OtFullDetailResponse obtenerDetalleCompleto(Integer idOts);
+    OtResponse obtenerPorId(Integer idOts);
 
-    OtFullDetailResponse obtenerPorNumeroOt(Integer numeroOt);
+    OtResponse obtenerPorNumeroOt(Integer numeroOt);
 
-    OtResponse saveOtCompleta(CrearOtCompletaRequest request);
+    OtDetailResponse saveOt(OtCreateRequest request);
 
-    void toggleEstado(Integer idOts);
+    void toggleActivo(Integer idOts);
 
-    // Opcional: si aún lo necesitas para compatibilidad
-    OtResponse obtenerPorId(Integer id);
+    OtFullResponse obtenerParaEdicion(Integer idOts);
+
+    // Opcional: si en algún momento necesitas el detalle completo por ID
+    OtDetailResponse obtenerDetallePorId(Integer idOts);
 }

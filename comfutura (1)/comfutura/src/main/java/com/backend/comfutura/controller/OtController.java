@@ -1,18 +1,16 @@
 package com.backend.comfutura.controller;
 
-import com.backend.comfutura.dto.request.CrearOtCompletaRequest;
-import com.backend.comfutura.dto.response.OtFullDetailResponse;
+import com.backend.comfutura.dto.request.OtCreateRequest;
+import com.backend.comfutura.dto.response.OtDetailResponse;
 import com.backend.comfutura.dto.response.OtFullResponse;
 import com.backend.comfutura.dto.response.OtResponse;
 import com.backend.comfutura.service.OtService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,44 +22,55 @@ public class OtController {
 
     // Listado paginado
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'COORDINADOR')")   // ajusta según tus roles
     public ResponseEntity<Page<OtResponse>> listar(
             @RequestParam(required = false) Boolean activo,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "idOts,desc") String sort) {
-
-        String[] parts = sort.split(",");
-        Sort.Direction dir = parts.length > 1 && "asc".equalsIgnoreCase(parts[1])
-                ? Sort.Direction.ASC : Sort.Direction.DESC;
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, parts[0]));
-
+            Pageable pageable) {
         return ResponseEntity.ok(otService.listarOts(activo, pageable));
     }
 
-    // Detalle completo por ID (principal para vista y edición)
+    // Detalle básico por ID (para cards o listas)
     @GetMapping("/{id}")
-    public ResponseEntity<OtFullDetailResponse> obtenerDetalle(@PathVariable Integer id) {
-        return ResponseEntity.ok(otService.obtenerDetalleCompleto(id));
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'COORDINADOR')")
+    public ResponseEntity<OtResponse> obtenerPorId(@PathVariable Integer id) {
+        return ResponseEntity.ok(otService.obtenerPorId(id));
     }
 
-    // Detalle por número OT legible (opcional, muy útil)
+    // Detalle básico por número OT
     @GetMapping("/numero/{numeroOt}")
-    public ResponseEntity<OtFullDetailResponse> obtenerPorNumero(@PathVariable Integer numeroOt) {
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'COORDINADOR')")
+    public ResponseEntity<OtResponse> obtenerPorNumeroOt(@PathVariable Integer numeroOt) {
         return ResponseEntity.ok(otService.obtenerPorNumeroOt(numeroOt));
     }
 
-    // Crear o editar OT completa
-    @PostMapping("/completa")
-    public ResponseEntity<OtResponse> guardarCompleta(@Valid @RequestBody CrearOtCompletaRequest request) {
-        OtResponse response = otService.saveOtCompleta(request);
-        return ResponseEntity.ok(response);
+    // Crear o actualizar OT
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORDINADOR')")
+    public ResponseEntity<OtDetailResponse> guardar(@RequestBody OtCreateRequest request) {
+        OtDetailResponse response = otService.saveOt(request);
+        HttpStatus status = (request.getIdOts() == null) ? HttpStatus.CREATED : HttpStatus.OK;
+        return new ResponseEntity<>(response, status);
     }
 
     // Toggle activo/inactivo
-    @PostMapping("/{id}/toggle")
-    public ResponseEntity<Void> toggleEstado(@PathVariable Integer id) {
-        otService.toggleEstado(id);
-        return ResponseEntity.ok().build();
+    @PatchMapping("/{id}/toggle-activo")
+    @PreAuthorize("hasRole('ADMIN')")   // o el rol que pueda desactivar OTs
+    public ResponseEntity<Void> toggleActivo(@PathVariable Integer id) {
+        otService.toggleActivo(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Datos para formulario de edición (solo IDs + campos editables)
+    @GetMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORDINADOR')")
+    public ResponseEntity<OtFullResponse> obtenerParaEdicion(@PathVariable Integer id) {
+        return ResponseEntity.ok(otService.obtenerParaEdicion(id));
+    }
+
+    // Opcional: detalle completo (incluye nombres y listas)
+    @GetMapping("/{id}/detail")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'COORDINADOR')")
+    public ResponseEntity<OtDetailResponse> obtenerDetalle(@PathVariable Integer id) {
+        return ResponseEntity.ok(otService.obtenerDetallePorId(id));
     }
 }

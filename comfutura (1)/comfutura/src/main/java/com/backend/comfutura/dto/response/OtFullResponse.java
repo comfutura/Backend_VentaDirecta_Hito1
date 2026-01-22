@@ -7,16 +7,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+// Para formulario de edición (solo IDs + datos básicos)
 @Data
 @Builder
-public class OtFullResponse {
+public class OtFullResponse {   // o renombrar a OtEditResponse
 
-    // Datos principales de la OT
     private Integer idOts;
-    private Integer ot;                      // número de OT generado
+    private Integer ot;
     private Integer idOtsAnterior;
 
-    // Referencias (IDs para formularios de edición)
     private Integer idCliente;
     private Integer idArea;
     private Integer idProyecto;
@@ -24,21 +23,21 @@ public class OtFullResponse {
     private Integer idSite;
     private Integer idRegion;
 
-    // Campos descriptivos
     private String descripcion;
     private LocalDate fechaApertura;
 
-    // Responsables (IDs)
+    // Solicitante cliente
     private Integer idJefaturaClienteSolicitante;
     private Integer idAnalistaClienteSolicitante;
+
+    // Responsables CW (IDs)
+    private Integer idCreador;                    // ← importante: readonly en frontend
     private Integer idCoordinadorTiCw;
     private Integer idJefaturaResponsable;
     private Integer idLiquidador;
     private Integer idEjecutante;
     private Integer idAnalistaContable;
 
-    // Estado
     private Boolean activo;
     private LocalDateTime fechaCreacion;
-
 }

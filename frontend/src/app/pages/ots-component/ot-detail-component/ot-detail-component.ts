@@ -1,10 +1,12 @@
+// src/app/pages/ot-detail/ot-detail.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
-
-import { OtFullDetailResponse } from '../../../model/ots'; // ← Usamos el tipo completo
 import { OtService } from '../../../service/ot.service';
+import { OtResponse } from '../../../model/ots';
+
+
 
 @Component({
   selector: 'app-ot-detail',
@@ -12,14 +14,13 @@ import { OtService } from '../../../service/ot.service';
   imports: [CommonModule, DatePipe],
   templateUrl: './ot-detail-component.html',
   styleUrl: './ot-detail-component.css',
-})// app-ot-detail.component.ts
-
+})
 export class OtDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private otService = inject(OtService);
 
-  ot: OtFullDetailResponse | null = null;
+  ot: OtResponse | null = null;
   loading = true;
   errorMessage = '';
 
@@ -31,7 +32,7 @@ export class OtDetailComponent implements OnInit {
       return;
     }
 
-    this.otService.getOtDetalleCompleto(id).subscribe({   // ← cambio aquí
+    this.otService.getOtById(id).subscribe({
       next: (detalle) => {
         this.ot = detalle;
         this.loading = false;
@@ -54,6 +55,6 @@ export class OtDetailComponent implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/ot']);  // o ['/ots'] según tu ruta
+    this.router.navigate(['/ot']); // o ['/ots'] según tu ruta
   }
 }

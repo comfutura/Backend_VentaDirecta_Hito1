@@ -26,31 +26,35 @@ public class Ots {
     private Integer ot;
 
     @Column(name = "id_ots_anterior")
-    private Integer otsAnterior;
+    private Integer idOtsAnterior;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_cliente")
     private Cliente cliente;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_area")
     private Area area;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_proyecto")
     private Proyecto proyecto;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_fase")
     private Fase fase;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_site")
     private Site site;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_region")
     private Region region;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_trabajador")
+    private Trabajador trabajador;
 
     @Column(columnDefinition = "TEXT")
     private String descripcion;
@@ -58,7 +62,12 @@ public class Ots {
     @Column(name = "fecha_apertura", nullable = false)
     private LocalDate fechaApertura;
 
-    // ── Relaciones uno-a-uno/muchos-a-uno (solo una persona por rol) ──
+
+
+    // =========================
+    // ROLES → TODOS SON TRABAJADORES
+    // =========================
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_jefatura_cliente_solicitante")
     private JefaturaClienteSolicitante jefaturaClienteSolicitante;
@@ -68,24 +77,29 @@ public class Ots {
     private AnalistaClienteSolicitante analistaClienteSolicitante;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_coordinador_ti_cw")   // ← corrige aquí
-    private CoordinadorTiCwPextEnergia coordinadorTiCw;     // ← también cambia el nombre del campo y el tipo
+    @JoinColumn(name = "id_coordinador_ti_cw")
+    private Trabajador coordinadorTiCw;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_jefatura_responsable")
-    private JefaturaResponsable jefaturaResponsable;
+    private Trabajador jefaturaResponsable;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_liquidador")
-    private Liquidador liquidador;
+    private Trabajador liquidador;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ejecutante")
-    private Ejecutante ejecutante;
+    private Trabajador ejecutante;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_analista_contable")
-    private AnalistaContable analistaContable;
+    private Trabajador analistaContable;
+
+    // =========================
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_estado_ot")
+    private EstadoOt estadoOt;
 
     @Column(name = "activo")
     private Boolean activo = true;

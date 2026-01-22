@@ -1,7 +1,5 @@
 package com.backend.comfutura.config;
 
-import com.backend.comfutura.model.Rol;
-import com.backend.comfutura.model.Trabajador;
 import com.backend.comfutura.model.Usuario;
 import com.backend.comfutura.record.UserJwtDto;
 import io.jsonwebtoken.*;
@@ -26,7 +24,7 @@ public class JwtService {
     @Value("${security.jwt.secret-key}")
     private String secretKey;
 
-    @Value("${security.jwt.expiration-minutes:60}") // default 60 minutos
+    @Value("${security.jwt.expiration-minutes:60}")
     private long expirationMinutes;
 
     private SecretKey getSignInKey() {
@@ -52,15 +50,16 @@ public class JwtService {
     }
 
     public String generateToken(Usuario usuario) {
+        // Ahora nivel es un objeto único, no una lista
+        String nivelCodigo = usuario.getNivel() != null ? usuario.getNivel().getCodigo() : "UNKNOWN";
+        String nivelNombre = usuario.getNivel() != null ? usuario.getNivel().getNombre() : "Sin nivel";
 
-        List<String> roles = usuario.getRoles()
-                .stream()
-                .map(Rol::getNombre)
-                .toList();
+        // Puedes enviar solo el código (L1, L2, etc.) o el nombre, o ambos
+        List<String> roles = List.of(nivelCodigo);  // o List.of(nivelNombre) o List.of(nivelCodigo + " - " + nivelNombre)
 
         UserJwtDto userData = new UserJwtDto(
-                usuario.getId(),
-                usuario.getTrabajador().getId(),
+                usuario.getIdUsuario(),
+                usuario.getTrabajador() != null ? usuario.getTrabajador().getIdTrabajador() : null,
                 usuario.getUsername(),
                 usuario.isActivo(),
                 roles
@@ -68,17 +67,18 @@ public class JwtService {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("data", userData);
-        claims.put("roles", roles);
+        claims.put("roles", roles);           // Lista con el código o nombre del nivel
+        claims.put("nivelCodigo", nivelCodigo);  // Opcional: para validaciones rápidas
+        claims.put("nivelNombre", nivelNombre);
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(usuario.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMinutes * 60 * 1000))
+                .claims(claims)
+                .subject(usuario.getUsername())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expirationMinutes * 60 * 1000))
                 .signWith(getSignInKey())
                 .compact();
     }
-
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);

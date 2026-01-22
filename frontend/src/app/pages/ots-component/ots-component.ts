@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
-import { OtResponse, Page } from '../../model/ots';        // Ajusta la ruta según tu estructura
+import { OtResponse, Page } from '../../model/ots'; // Ajusta la ruta
 import { OtService } from '../../service/ot.service';
 
 @Component({
@@ -22,10 +22,19 @@ export class OtsComponent implements OnInit {
   private otService = inject(OtService);
   private router = inject(Router);
 
-  // Columnas de la tabla
-  displayedColumns: string[] = ['ot', 'descripcion', 'fechaCreacion', 'activo', 'acciones'];
+  // Columnas visibles en la tabla (ajustadas al nuevo OtResponse)
+  displayedColumns: string[] = [
+    'ot',
+    'descripcion',
+    'clienteRazonSocial',
+    'siteNombre',
+    'estadoOt',
+    'diasAsignados',
+    'activo',
+    'acciones'
+  ];
 
-  // Datos de la tabla y paginación
+  // Datos
   otsPage: Page<OtResponse> | null = null;
   dataSource: OtResponse[] = [];
 
@@ -35,10 +44,10 @@ export class OtsComponent implements OnInit {
   totalPages = 0;
 
   // Filtros
-  activoFilter: 'todas' | 'activas' | 'inactivas' = 'activas'; // valor por defecto
-  otFilter: number | null = null; // filtro por número OT exacto
-  sortField = 'idOts';            // campo por defecto
-  sortDirection = 'desc';         // asc o desc
+  activoFilter: 'todas' | 'activas' | 'inactivas' = 'activas';
+  otFilter: number | null = null;
+  sortField = 'idOts';
+  sortDirection = 'desc';
 
   loading = false;
   errorMessage: string | null = null;
@@ -48,43 +57,40 @@ export class OtsComponent implements OnInit {
   }
 
   loadOts(page: number = this.pageIndex): void {
-  this.loading = true;
-  this.errorMessage = null;
+    this.loading = true;
+    this.errorMessage = null;
 
-  let activoParam: boolean | null = null;
-  if (this.activoFilter === 'activas') activoParam = true;
-  else if (this.activoFilter === 'inactivas') activoParam = false;
+    let activoParam: boolean | null = null;
+    if (this.activoFilter === 'activas') activoParam = true;
+    else if (this.activoFilter === 'inactivas') activoParam = false;
 
-  const sort = `${this.sortField},${this.sortDirection}`;
+    const sort = `${this.sortField},${this.sortDirection}`;
 
-  this.otService.listarOts(
-    activoParam,          // solo este parámetro de filtro
-    page,
-    this.pageSize,
-    sort
-  ).subscribe({
-    next: (pageData) => {
-      this.otsPage = pageData;
-      this.dataSource = pageData.content || [];
-      this.totalElements = pageData.totalElements || 0;
-      this.pageIndex = pageData.number || 0;
-      this.pageSize = pageData.size || this.pageSize;
-      this.totalPages = pageData.totalPages || 1;
-      this.loading = false;
-    },
-    error: (err) => {
-      this.errorMessage = err.message || 'No se pudieron cargar las órdenes de trabajo';
-      this.loading = false;
-    }
-  });
-}
+    this.otService.listarOts(
+      activoParam,
+      page,
+      this.pageSize,
+      sort
+    ).subscribe({
+      next: (pageData) => {
+        this.otsPage = pageData;
+        this.dataSource = pageData.content || [];
+        this.totalElements = pageData.totalElements || 0;
+        this.pageIndex = pageData.number || 0;
+        this.pageSize = pageData.size || this.pageSize;
+        this.totalPages = pageData.totalPages || 1;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'No se pudieron cargar las órdenes de trabajo';
+        this.loading = false;
+      }
+    });
+  }
 
-  // ────────────────────────────────────────────────
-  // Filtros y búsqueda
-  // ────────────────────────────────────────────────
-
+  // Filtros
   onFilterChange(): void {
-    this.pageIndex = 0; // resetear paginación al cambiar filtro
+    this.pageIndex = 0;
     this.loadOts();
   }
 
@@ -98,10 +104,7 @@ export class OtsComponent implements OnInit {
     this.onFilterChange();
   }
 
-  // ────────────────────────────────────────────────
   // Paginación
-  // ────────────────────────────────────────────────
-
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages || page === this.pageIndex) return;
     this.pageIndex = page;
@@ -132,21 +135,19 @@ export class OtsComponent implements OnInit {
     return pages;
   }
 
-  // ────────────────────────────────────────────────
-  // Acciones principales
-  // ────────────────────────────────────────────────
-
+  // Acciones
   goToCreate(): void {
     this.router.navigate(['/ot/nuevo']);
   }
 
- goToEdit(ot: OtResponse): void {
-  this.router.navigate(['/ot/editar', ot.idOts]);
-}
+  goToEdit(ot: OtResponse): void {
+    this.router.navigate(['/ot/editar', ot.idOts]);
+  }
 
-viewDetail(ot: OtResponse): void {
-  this.router.navigate(['/ot', ot.idOts]);           // → /ot/123
-}
+  viewDetail(ot: OtResponse): void {
+    this.router.navigate(['/ot', ot.idOts]);
+  }
+
   toggleEstado(ot: OtResponse): void {
     const nuevoEstado = ot.activo ? 'inactiva' : 'activa';
     const accion = ot.activo ? 'desactivar' : 'activar';
@@ -175,7 +176,7 @@ viewDetail(ot: OtResponse): void {
             toast: true,
             position: 'top-end'
           });
-          this.loadOts(); // recargar manteniendo filtros y página
+          this.loadOts();
         },
         error: (err) => {
           Swal.fire({
