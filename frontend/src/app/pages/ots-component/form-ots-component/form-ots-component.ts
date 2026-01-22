@@ -1,4 +1,3 @@
-// src/app/pages/form-ots/form-ots.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -9,13 +8,13 @@ import Swal from 'sweetalert2';
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
 import { AuthService } from '../../../service/auth.service';
 import { OtService } from '../../../service/ot.service';
-import { CrearOtCompletaRequest, OtCreateRequest, OtResponse } from '../../../model/ots';
+import { OtCreateRequest, OtDetailResponse } from '../../../model/ots'; // ← OtDetailResponse para el retorno
 
 @Component({
-  selector: 'app-form-ots-component',
+  selector: 'app-form-ots',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './form-ots-component.html',
+ templateUrl: './form-ots-component.html',
   styleUrl: './form-ots-component.css'
 })
 export class FormOtsComponent implements OnInit {
@@ -25,13 +24,12 @@ export class FormOtsComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-
+currentStep: number = 1;
   form!: FormGroup;
   submitted = false;
   loading = true;
   isEditMode = false;
   otId: number | null = null;
-  otNumber: string | null = null;
 
   usernameLogueado: string = '—';
   trabajadorIdLogueado: number | null = null;
@@ -66,14 +64,12 @@ export class FormOtsComponent implements OnInit {
     this.isEditMode = !!idParam && !isNaN(Number(idParam));
     this.otId = this.isEditMode ? Number(idParam) : null;
 
-    // Cargar todo lo necesario
     if (this.isEditMode && this.otId) {
       this.cargarDatosParaEdicion(this.otId);
     } else {
       this.cargarDropdownsParaCreacion();
     }
 
-    // Suscripciones reactivas
     this.suscribirCambiosFormulario();
   }
 
@@ -102,12 +98,40 @@ export class FormOtsComponent implements OnInit {
       idOtsAnterior: [null, [Validators.min(1), Validators.pattern('^[0-9]+$')]]
     });
 
-    // En modo creación la descripción se genera automáticamente
+    // En creación → descripción auto-generada y deshabilitada
     if (!this.isEditMode) {
       this.form.get('descripcion')?.disable();
     }
   }
+// Propiedades calculadas para el resumen (Paso 3)
+get clienteNombre(): string {
+  return this.clientes.find(c => c.id === this.form.value.idCliente)?.label || '—';
+}
 
+get areaNombre(): string {
+  return this.areas.find(a => a.id === this.form.value.idArea)?.label || '—';
+}
+
+get proyectoNombre(): string {
+  return this.proyectos.find(p => p.id === this.form.value.idProyecto)?.label || '—';
+}
+
+get faseNombre(): string {
+  return this.fases.find(f => f.id === this.form.value.idFase)?.label || '—';
+}
+
+get siteNombre(): string {
+  return this.sites.find(s => s.id === this.form.value.idSite)?.label || '—';
+}
+
+get regionNombre(): string {
+  return this.regiones.find(r => r.id === this.form.value.idRegion)?.label || '—';
+}
+
+get fechaAperturaFormatted(): string {
+  const fecha = this.form.value.fechaApertura;
+  return fecha ? new Date(fecha).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+}
   private suscribirCambiosFormulario(): void {
     // Cascada: áreas según cliente
     this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
@@ -132,9 +156,7 @@ export class FormOtsComponent implements OnInit {
 
   private cargarDropdownsParaCreacion(): void {
     this.cargarTodosLosCatalogos().subscribe({
-      next: () => {
-        this.loading = false;
-      },
+      next: () => this.loading = false,
       error: () => {
         Swal.fire('Error', 'No se pudieron cargar los catálogos necesarios', 'error');
         this.loading = false;
@@ -144,33 +166,14 @@ export class FormOtsComponent implements OnInit {
 
   private cargarDatosParaEdicion(id: number): void {
     forkJoin({
-      ot: this.otService.getOtById(id),
+      ot: this.otService.getOtParaEdicion(id),  // Devuelve OtCreateRequest con IDs
       catalogs: this.cargarTodosLosCatalogos()
     }).subscribe({
       next: ({ ot }) => {
-        this.otNumber = ot.ot?.toString() ?? null;
+        // Patch directo porque /edit devuelve OtCreateRequest
+        this.form.patchValue(ot);
 
-        this.form.patchValue({
-          idOts: ot.idOts,
-          idCliente: this.findIdByLabel(this.clientes, ot.clienteRazonSocial),
-          idArea: this.findIdByLabel(this.areas, ot.areaNombre),
-          idProyecto: this.findIdByLabel(this.proyectos, ot.proyectoNombre),
-          idFase: this.findIdByLabel(this.fases, ot.faseNombre),
-          idSite: this.findIdByLabel(this.sites, ot.siteNombre),
-          idRegion: this.findIdByLabel(this.regiones, ot.regionNombre),
-          descripcion: ot.descripcion || '',
-          fechaApertura: ot.fechaApertura ? ot.fechaApertura.split('T')[0] : '',
-          idJefaturaClienteSolicitante: this.findIdByLabel(this.jefaturasCliente, ot.jefaturaClienteSolicitante),
-          idAnalistaClienteSolicitante: this.findIdByLabel(this.analistasCliente, ot.analistaClienteSolicitante),
-          idCoordinadorTiCw: this.findIdByLabel(this.coordinadoresTiCw, ot.coordinadorTiCw),
-          idJefaturaResponsable: this.findIdByLabel(this.jefaturasResponsable, ot.jefaturaResponsable),
-          idLiquidador: this.findIdByLabel(this.liquidadores, ot.liquidador),
-          idEjecutante: this.findIdByLabel(this.ejecutantes, ot.ejecutante),
-          idAnalistaContable: this.findIdByLabel(this.analistasContable, ot.analistaContable),
-          idOtsAnterior: null  // Si lo necesitas, agrégalo al backend
-        });
-
-        // Forzar recarga de áreas si hay cliente seleccionado
+        // Forzar carga de áreas si hay cliente
         const clienteId = this.form.get('idCliente')?.value;
         if (clienteId) {
           this.cargarAreasPorCliente(clienteId);
@@ -179,11 +182,7 @@ export class FormOtsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo cargar la información de la OT para edición',
-        });
+        Swal.fire('Error', 'No se pudo cargar la OT para edición', 'error');
         this.router.navigate(['/ot']);
       }
     });
@@ -223,9 +222,8 @@ export class FormOtsComponent implements OnInit {
 
   private cargarAreasPorCliente(idCliente: number): void {
     this.dropdownService.getAreasByCliente(idCliente).subscribe({
-      next: (areas) => {
+      next: areas => {
         this.areas = areas || [];
-        // Si ya hay un valor de área en el form y no está en la nueva lista → limpiarlo
         const areaActual = this.form.get('idArea')?.value;
         if (areaActual && !this.areas.some(a => a.id === areaActual)) {
           this.form.get('idArea')?.setValue(null, { emitEvent: false });
@@ -238,11 +236,6 @@ export class FormOtsComponent implements OnInit {
     });
   }
 
-  private findIdByLabel(items: DropdownItem[], label?: string | null): number | null {
-    if (!label) return null;
-    return items.find(item => item.label === label)?.id ?? null;
-  }
-
   private actualizarDescripcion(): void {
     if (this.isEditMode) return;
 
@@ -253,28 +246,16 @@ export class FormOtsComponent implements OnInit {
     const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
 
     const toSlug = (str: string) =>
-      str
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, '_')
-        .replace(/[^a-z0-9_]/g, '')
-        .replace(/_+/g, '_')
-        .replace(/^_+|_+$/g, '');
+      str.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
 
-    const partes = [
-      toSlug(proyecto),
-      toSlug(area),
-      v.idSite ? String(v.idSite) : '',
-      toSlug(site)
-    ].filter(Boolean);
+    const partes = [toSlug(proyecto), toSlug(area), v.idSite ? String(v.idSite) : '', toSlug(site)]
+      .filter(Boolean);
 
     const desc = partes.join('_') || 'OT sin descripción automática';
     this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
   }
 
-  get f() {
-    return this.form.controls;
-  }
+  get f() { return this.form.controls; }
 
   onSubmit(): void {
     this.submitted = true;
@@ -306,7 +287,7 @@ export class FormOtsComponent implements OnInit {
 
       const values = this.form.getRawValue();
 
-      const otPayload: OtCreateRequest = {
+      const payload: OtCreateRequest = {
         idOts: this.isEditMode ? Number(values.idOts) : undefined,
         idCliente: Number(values.idCliente),
         idArea: Number(values.idArea),
@@ -326,14 +307,8 @@ export class FormOtsComponent implements OnInit {
         idAnalistaContable: values.idAnalistaContable || null,
       };
 
-      const payload: CrearOtCompletaRequest = {
-        ot: otPayload,
-        trabajadores: [],   // ← implementa si manejas asignación de trabajadores
-        // detalles: []     // si usas ítems/materiales
-      };
-
-      this.otService.saveOtCompleta(payload).subscribe({
-        next: (res: OtResponse) => {
+      this.otService.saveOt(payload).subscribe({
+        next: (res: OtDetailResponse) => {  // ← Cambiado a OtDetailResponse
           Swal.fire({
             icon: 'success',
             title: this.isEditMode ? '¡OT actualizada!' : '¡OT creada con éxito!',
@@ -348,7 +323,7 @@ export class FormOtsComponent implements OnInit {
           Swal.fire({
             icon: 'error',
             title: 'Error al guardar',
-            text: err.error?.message || 'Ocurrió un problema inesperado',
+            text: err.message || 'Ocurrió un problema inesperado',
           });
           this.loading = false;
         }

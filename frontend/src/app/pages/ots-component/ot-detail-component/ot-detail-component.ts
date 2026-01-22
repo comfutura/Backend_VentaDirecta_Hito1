@@ -1,12 +1,10 @@
-// src/app/pages/ot-detail/ot-detail.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
+
 import { OtService } from '../../../service/ot.service';
-import { OtResponse } from '../../../model/ots';
-
-
+import { OtDetailResponse } from '../../../model/ots';  // ← Asegúrate de usar este
 
 @Component({
   selector: 'app-ot-detail',
@@ -20,7 +18,7 @@ export class OtDetailComponent implements OnInit {
   private router = inject(Router);
   private otService = inject(OtService);
 
-  ot: OtResponse | null = null;
+  ot: OtDetailResponse | null = null;
   loading = true;
   errorMessage = '';
 
@@ -55,6 +53,12 @@ export class OtDetailComponent implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/ot']); // o ['/ots'] según tu ruta
+    this.router.navigate(['/ot']);
+  }
+
+  editarOt(): void {
+    if (this.ot?.idOts) {
+      this.router.navigate(['/ot/edit', this.ot.idOts]);
+    }
   }
 }

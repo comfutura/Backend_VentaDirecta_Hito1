@@ -4,8 +4,8 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
+import { OtCreateRequest, OtDetailResponse, OtListDto, Page } from '../model/ots';
 import { environment } from '../../environment';
-import { CrearOtCompletaRequest, OtResponse, Page } from '../model/ots'; // ajusta la carpeta si es necesario
 
 @Injectable({
   providedIn: 'root'
@@ -16,63 +16,77 @@ export class OtService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Crea o actualiza una OT completa (upsert)
-   * Devuelve OtResponse completo con todos los campos mapeados
+   * Crea o actualiza una OT
+   * Endpoint: POST /api/ots
+   * Devuelve detalle completo después de guardar
    */
-  saveOtCompleta(payload: CrearOtCompletaRequest): Observable<OtResponse> {
-    return this.http.post<OtResponse>(`${this.apiUrl}/completa`, payload).pipe(
+  saveOt(payload: OtCreateRequest): Observable<OtDetailResponse> {
+    return this.http.post<OtDetailResponse>(this.apiUrl, payload).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * Lista paginada de OTs (ahora devuelve OtResponse completo)
+   * Lista paginada de OTs con filtro de texto
+   * Endpoint: GET /api/ots?search=texto&page=0&size=10&sort=ot,desc
    */
   listarOts(
-    activo?: boolean | null,
+    search?: string,
     page: number = 0,
     size: number = 10,
-    sort: string = 'idOts,desc'
-  ): Observable<Page<OtResponse>> {
+    sort: string = 'ot,desc'
+  ): Observable<Page<OtListDto>> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
       .set('sort', sort);
 
-    if (activo !== undefined && activo !== null) {
-      params = params.set('activo', activo.toString());
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
     }
 
-    return this.http.get<Page<OtResponse>>(this.apiUrl, { params }).pipe(
+    return this.http.get<Page<OtListDto>>(this.apiUrl, { params }).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * Obtiene el detalle completo de una OT por ID interno
-   * Devuelve OtResponse (ahora incluye todos los campos: nombres, códigos, etc.)
+   * Obtiene detalle completo por ID interno
+   * Endpoint: GET /api/ots/{id}/detail
    */
-  getOtById(id: number): Observable<OtResponse> {
-    return this.http.get<OtResponse>(`${this.apiUrl}/${id}`).pipe(
+  getOtById(id: number): Observable<OtDetailResponse> {
+    return this.http.get<OtDetailResponse>(`${this.apiUrl}/${id}/detail`).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * Obtiene el detalle completo de una OT por número legible (ej: 20250001)
-   * Devuelve OtResponse completo
+   * Obtiene detalle completo por número OT legible (ej: 20250001)
+   * Endpoint: GET /api/ots/numero/{numeroOt}/detail
    */
-  getOtByNumeroOt(ot: number): Observable<OtResponse> {
-    return this.http.get<OtResponse>(`${this.apiUrl}/numero/${ot}`).pipe(
+  getOtByNumeroOt(numeroOt: number): Observable<OtDetailResponse> {
+    return this.http.get<OtDetailResponse>(`${this.apiUrl}/numero/${numeroOt}/detail`).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * Alterna activo/inactivo
+   * Alterna activo ↔ inactivo
+   * Endpoint: PATCH /api/ots/{id}/toggle-activo
    */
-  toggleEstado(id: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${id}/toggle`, {}).pipe(
+  toggleActivo(id: number): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${id}/toggle-activo`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Obtiene datos para formulario de edición (solo IDs + básicos)
+   * Endpoint: GET /api/ots/{id}/edit
+   * Retorna OtCreateRequest directamente
+   */
+  getOtParaEdicion(id: number): Observable<OtCreateRequest> {
+    return this.http.get<OtCreateRequest>(`${this.apiUrl}/${id}/edit`).pipe(
       catchError(this.handleError)
     );
   }
@@ -88,6 +102,7 @@ export class OtService {
       errorMessage = error.error?.message || `Error ${error.status}: ${error.statusText}`;
       if (error.status === 404) errorMessage = 'OT no encontrada';
       if (error.status === 400) errorMessage = 'Datos inválidos o incompletos';
+      if (error.status === 403) errorMessage = 'No tienes permisos para esta acción';
     }
 
     console.error('[OtService]', errorMessage, error);

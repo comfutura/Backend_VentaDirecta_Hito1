@@ -41,6 +41,5 @@ public class OtResponse {
     private String liquidador;
     private String ejecutante;
     private String analistaContable;
-
     private String estadoOt;
 }

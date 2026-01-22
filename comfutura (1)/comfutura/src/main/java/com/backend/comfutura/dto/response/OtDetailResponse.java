@@ -1,3 +1,4 @@
+// OtDetailResponse.java  →  detalle completo (para vista de detalle)
 package com.backend.comfutura.dto.response;
 
 import lombok.Builder;
@@ -5,22 +6,20 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
 public class OtDetailResponse {
-
     private Integer idOts;
-    private Integer ot;                    // número legible de la OT
+    private Integer ot;
     private Integer idOtsAnterior;
 
     private String descripcion;
     private LocalDate fechaApertura;
+    private Integer diasAsignados;
     private LocalDateTime fechaCreacion;
     private Boolean activo;
 
-    // ── Entidades relacionadas ────────────────
     private Integer idCliente;
     private String clienteRazonSocial;
 
@@ -39,39 +38,29 @@ public class OtDetailResponse {
     private Integer idRegion;
     private String regionNombre;
 
-    // ── Responsables ──────────────────────────
     private Integer idJefaturaClienteSolicitante;
-    private String  jefaturaClienteSolicitanteNombre;
+    private String jefaturaClienteSolicitanteNombre;
 
     private Integer idAnalistaClienteSolicitante;
-    private String  analistaClienteSolicitanteNombre;
+    private String analistaClienteSolicitanteNombre;
+
+    private Integer idCreador;
+    private String creadorNombre;
 
     private Integer idCoordinadorTiCw;
-    private String  coordinadorTiCwNombre;
+    private String coordinadorTiCwNombre;
 
     private Integer idJefaturaResponsable;
-    private String  jefaturaResponsableNombre;
+    private String jefaturaResponsableNombre;
 
     private Integer idLiquidador;
-    private String  liquidadorNombre;
+    private String liquidadorNombre;
 
     private Integer idEjecutante;
-    private String  ejecutanteNombre;
+    private String ejecutanteNombre;
 
     private Integer idAnalistaContable;
-    private String  analistaContableNombre;
+    private String analistaContableNombre;
 
-    // ── Trabajadores asignados ────────────────
-    private List<TrabajadorEnOtDto> trabajadoresAsignados;
     private String estadoOt;
-    @Data
-    @Builder
-    public static class TrabajadorEnOtDto {
-        private Integer idTrabajador;
-        private String nombresCompletos;
-        private String cargoNombre;
-        private String areaTrabajadorNombre;
-        private String rolEnOt;
-        private Boolean activo;
-    }
 }

@@ -1,36 +1,34 @@
-/* Gradiente principal consistente con el listado */
+/* Gradiente principal más suave y moderno */
 .bg-gradient-primary {
-  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
 }
 
-/* Card general */
+/* Card más elegante */
 .card {
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   overflow: hidden;
+  border: none;
 }
 
-.shadow-lg {
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12) !important;
+.shadow-xl {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Header */
-.card-header {
-  padding: 1.25rem 1.5rem;
-  font-weight: 600;
-}
-
-/* Form floating mejorado */
+/* Form floating más bonito */
 .form-floating > .form-control,
 .form-floating > .form-select {
   height: calc(3.5rem + 2px);
   line-height: 1.25;
   padding: 1rem 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #ced4da;
+  transition: all 0.25s ease;
 }
 
 .form-floating > label {
   padding: 1rem 0.75rem;
   color: #6c757d;
+  transition: all 0.25s ease;
 }
 
 .form-floating > .form-control:focus,
@@ -44,55 +42,49 @@
 .form-floating > .form-select ~ label {
   color: #0d6efd;
   transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+  background: white;
+  padding: 0 0.5rem;
 }
 
-/* Campos readonly / disabled */
-.form-control[readonly],
-.form-select:disabled {
-  background-color: #f8f9fa;
-  opacity: 1;
-  cursor: not-allowed;
+/* Tabs de pasos */
+.nav-pills .nav-link {
+  transition: all 0.3s ease;
 }
 
-/* Botones */
+.nav-pills .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  font-weight: 700;
+}
+
+/* Botones más elegantes */
 .btn-primary {
   background: linear-gradient(90deg, #0d6efd, #0a58ca);
   border: none;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(90deg, #0b5ed7, #084298);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+  box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
 }
 
-.btn-outline-secondary {
-  transition: all 0.2s;
-}
-
-.btn-outline-secondary:hover:not(:disabled) {
-  background-color: #e9ecef;
-}
-
-/* Texto pequeño */
-.form-text {
-  font-size: 0.82rem;
-  line-height: 1.4;
-}
-
-/* Responsivo */
+/* Responsivo extremo */
 @media (max-width: 576px) {
   .card-body {
-    padding: 1.5rem !important;
+    padding: 1.25rem !important;
   }
 
   .btn {
     width: 100%;
-    justify-content: center;
+    margin-bottom: 0.75rem;
   }
 
   h6 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+
+  .nav-pills .nav-link {
+    font-size: 0.9rem;
+    padding: 0.5rem;
   }
 }

@@ -225,4 +225,48 @@ INSERT INTO ots (
 -- 17. Estados de Orden de Compra (sin cambios)
 INSERT INTO estado_oc (nombre) VALUES
                                    ('PENDIENTE'), ('APROBADA'), ('RECHAZADA'), ('ANULADA'),
-                                   ('EN PROCESO'), ('ATENDIDA'), ('CERRADA');
+                                   ('EN PROCESO'), ('ATENDIDA'), ('CERRADA');-- =====================================================
+-- RELACIONES CLIENTE - ÁREA (tabla cliente_area)
+-- =====================================================
+
+-- COMFUTURA (empresa propia) → acceso a TODAS las áreas internas
+INSERT IGNORE INTO cliente_area (id_cliente, id_area, activo) VALUES
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'RRHH'),           1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'COSTOS'),          1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'ADMINISTRATIVA'),  1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),         1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'CW'),              1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'COMERCIAL'),       1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'PEXT'),            1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'SAQ'),             1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'SSOMA'),           1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'TI'),              1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'CIERRE'),          1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD'),    1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'COMFUTURA'), (SELECT id_area FROM area WHERE nombre = 'LOGISTICA'),       1);
+
+-- CLARO PERÚ → áreas típicas de cliente externo (CW, ENERGIA, PEXT, SAQ, TI, etc.)
+INSERT IGNORE INTO cliente_area (id_cliente, id_area, activo) VALUES
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'CLARO PERÚ'), (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),     1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'CLARO PERÚ'), (SELECT id_area FROM area WHERE nombre = 'CW'),           1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'CLARO PERÚ'), (SELECT id_area FROM area WHERE nombre = 'PEXT'),         1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'CLARO PERÚ'), (SELECT id_area FROM area WHERE nombre = 'SAQ'),          1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'CLARO PERÚ'), (SELECT id_area FROM area WHERE nombre = 'TI'),           1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'CLARO PERÚ'), (SELECT id_area FROM area WHERE nombre = 'CIERRE'),       1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'CLARO PERÚ'), (SELECT id_area FROM area WHERE nombre = 'SSOMA'),        1);
+
+-- ENTEL PERÚ → similar a Claro, pero con énfasis en algunas áreas específicas
+INSERT IGNORE INTO cliente_area (id_cliente, id_area, activo) VALUES
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERÚ'), (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),     1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERÚ'), (SELECT id_area FROM area WHERE nombre = 'CW'),           1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERÚ'), (SELECT id_area FROM area WHERE nombre = 'PEXT'),         1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERÚ'), (SELECT id_area FROM area WHERE nombre = 'SAQ'),          1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERÚ'), (SELECT id_area FROM area WHERE nombre = 'TI'),           1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERÚ'), (SELECT id_area FROM area WHERE nombre = 'ENTEL'),        1);  -- Área exclusiva de Entel
+
+-- STL TELECOM → cliente más pequeño, solo algunas áreas operativas
+INSERT IGNORE INTO cliente_area (id_cliente, id_area, activo) VALUES
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'STL TELECOM'), (SELECT id_area FROM area WHERE nombre = 'CW'),         1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'STL TELECOM'), (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),     1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'STL TELECOM'), (SELECT id_area FROM area WHERE nombre = 'TI'),          1),
+    ((SELECT id_cliente FROM cliente WHERE razon_social = 'STL TELECOM'), (SELECT id_area FROM area WHERE nombre = 'CIERRE'),      1);
