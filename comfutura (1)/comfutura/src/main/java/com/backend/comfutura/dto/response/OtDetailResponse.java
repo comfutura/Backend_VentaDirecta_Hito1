@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class OtFullDetailResponse {
+public class OtDetailResponse {
 
     private Integer idOts;
     private Integer ot;                    // número legible de la OT
@@ -63,7 +63,7 @@ public class OtFullDetailResponse {
 
     // ── Trabajadores asignados ────────────────
     private List<TrabajadorEnOtDto> trabajadoresAsignados;
-
+    private String estadoOt;
     @Data
     @Builder
     public static class TrabajadorEnOtDto {

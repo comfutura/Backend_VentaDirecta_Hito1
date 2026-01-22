@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface TrabajadorRepository extends JpaRepository<Trabajador, Integer> {
 
-    List<Trabajador> findByActivoTrueOrderByApellidosAsc();
+    List<Trabajador> findByActivoTrueAndCargo_NombreOrderByApellidosAsc(String nombreCargo);
 
 }

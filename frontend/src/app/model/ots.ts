@@ -1,65 +1,38 @@
 // src/app/core/models/ots.ts
 
+// Respuesta principal (listado y detalle)
 export interface OtResponse {
   idOts: number;
   ot: number;
   descripcion: string;
+  fechaApertura?: string | null;       // ISO date string o null
+  diasAsignados: number;               // calculado en backend
   activo: boolean;
-  fechaCreacion: string; // ISO string
-}
+  fechaCreacion: string;               // ISO timestamp
 
-export interface OtFullDetailResponse {
-  idOts: number;
-  ot: number;
-  idOtsAnterior?: number | null;
+  // Relaciones con nombres
+  clienteRazonSocial?: string | null;
+  areaNombre?: string | null;
+  proyectoNombre?: string | null;
+  faseNombre?: string | null;
+  siteNombre?: string | null;          // ahora es codigo_sitio
+  regionNombre?: string | null;
 
-  descripcion: string;
-  fechaApertura?: string;      // puede ser null
-  fechaCreacion: string;
-  activo: boolean;
+  // Responsables del cliente
+  jefaturaClienteSolicitante?: string | null;
+  analistaClienteSolicitante?: string | null;
 
-  // Entidades relacionadas con nombres
-  idCliente?: number;
-  clienteRazonSocial?: string;
+  // Responsables internos (nombres completos)
+  coordinadorTiCw?: string | null;
+  jefaturaResponsable?: string | null;
+  liquidador?: string | null;
+  ejecutante?: string | null;
+  analistaContable?: string | null;
 
-  idArea?: number;
-  areaNombre?: string;
+  // Estado
+  estadoOt?: string | null;
 
-  idProyecto?: number;
-  proyectoNombre?: string;
-
-  idFase?: number;
-  faseNombre?: string;
-
-  idSite?: number;
-  siteNombre?: string;
-
-  idRegion?: number;
-  regionNombre?: string;
-
-  // Responsables (IDs + nombres descriptivos)
-  idJefaturaClienteSolicitante?: number;
-  jefaturaClienteSolicitanteNombre?: string;
-
-  idAnalistaClienteSolicitante?: number;
-  analistaClienteSolicitanteNombre?: string;
-
-  idCoordinadorTiCw?: number;
-  coordinadorTiCwNombre?: string;
-
-  idJefaturaResponsable?: number;
-  jefaturaResponsableNombre?: string;
-
-  idLiquidador?: number;
-  liquidadorNombre?: string;
-
-  idEjecutante?: number;
-  ejecutanteNombre?: string;
-
-  idAnalistaContable?: number;
-  analistaContableNombre?: string;
-
-  // Lista de trabajadores asignados a esta OT
+  // Trabajadores asignados
   trabajadoresAsignados: TrabajadorEnOtDto[];
 }
 
@@ -67,28 +40,29 @@ export interface TrabajadorEnOtDto {
   idTrabajador: number;
   nombresCompletos: string;
   cargoNombre?: string | null;
-  areaTrabajadorNombre?: string | null;
+  areaNombre?: string | null;
   rolEnOt: string;
-  activo: boolean;
+  activo?: boolean;
 }
 
-// Para el guardado (lo que envías al backend)
+// Request para crear/editar OT completa
 export interface CrearOtCompletaRequest {
   ot: OtCreateRequest;
   trabajadores?: Array<{ idTrabajador: number; rolEnOt: string }>;
+  detalles?: Array<OtDetalleRequest>; // si usas ítems/materiales
 }
 
 export interface OtCreateRequest {
-  idOts?: number;               // si es edición
+  idOts?: number;                      // para edición
   idOtsAnterior?: number | null;
-  idCliente: number;            // requeridos en creación
+  idCliente: number;
   idArea: number;
   idProyecto: number;
   idFase: number;
   idSite: number;
   idRegion: number;
   descripcion?: string;
-  fechaApertura?: string;       // formato 'YYYY-MM-DD'
+  fechaApertura?: string;              // 'YYYY-MM-DD'
   idJefaturaClienteSolicitante?: number | null;
   idAnalistaClienteSolicitante?: number | null;
   idCoordinadorTiCw?: number | null;
@@ -98,7 +72,14 @@ export interface OtCreateRequest {
   idAnalistaContable?: number | null;
 }
 
-// Para la paginación
+export interface OtDetalleRequest {
+  idMaestro: number;
+  idProveedor: number;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+// Para paginación genérica
 export interface Page<T> {
   content: T[];
   pageable: {

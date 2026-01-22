@@ -19,8 +19,5 @@ public class Proyecto {
     @Column(nullable = false, length = 150)
     private String nombre;
 
-    @Column(length = 255)
-    private String descripcion;
-
     private Boolean activo = true;
 }

@@ -28,4 +28,5 @@ public class OtCreateRequest {
     private Integer idLiquidador;
     private Integer idEjecutante;
     private Integer idAnalistaContable;
+    private boolean activo;
 }

@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+// Para listado y detalle rápido (lo que más se usa)
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,7 +14,7 @@ import java.util.List;
 public class OtResponse {
 
     private Integer idOts;
-    private Integer ot;                // número de OT
+    private Integer ot;
 
     private String descripcion;
     private LocalDate fechaApertura;
@@ -21,36 +22,25 @@ public class OtResponse {
     private Boolean activo;
     private LocalDateTime fechaCreacion;
 
-    // Relaciones principales
+    // Entidades principales
     private String clienteRazonSocial;
     private String areaNombre;
     private String proyectoNombre;
     private String faseNombre;
-    private String siteNombre;
+    private String siteCodigo;          // o siteNombre si prefieres
     private String regionNombre;
 
-    // Responsables (descripciones)
+    // Solicitante (cliente)
     private String jefaturaClienteSolicitante;
     private String analistaClienteSolicitante;
+
+    // Responsables internos (nombres completos)
+    private String creadorNombre;           // ← el id_trabajador original
     private String coordinadorTiCw;
     private String jefaturaResponsable;
     private String liquidador;
     private String ejecutante;
     private String analistaContable;
 
-    // Opcional: lista de trabajadores asignados con su rol
-    private List<TrabajadorEnOtDto> trabajadoresAsignados;
-
-    // DTO anidado para trabajadores
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class TrabajadorEnOtDto {
-        private Integer idTrabajador;
-        private String nombresCompletos;  // nombres + apellidos
-        private String rolEnOt;
-        private String cargoNombre;
-        private String areaNombre;
-    }
+    private String estadoOt;
 }

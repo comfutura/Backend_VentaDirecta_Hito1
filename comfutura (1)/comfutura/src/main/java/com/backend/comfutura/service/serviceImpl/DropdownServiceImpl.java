@@ -1,6 +1,5 @@
 package com.backend.comfutura.service.serviceImpl;
 
-import com.backend.comfutura.model.*;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.DropdownService;
@@ -22,15 +21,11 @@ public class DropdownServiceImpl implements DropdownService {
     private final SiteRepository siteRepository;
     private final RegionRepository regionRepository;
     private final OtsRepository otsRepository;
+    private final TrabajadorRepository trabajadorRepository;
 
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteSolicitanteRepository;
-    private final CoordinadorTiCwRepository coordinadorTiCwRepository;
-    private final JefaturaResponsableRepository jefaturaResponsableRepository;
-    private final LiquidadorRepository liquidadorRepository;
-    private final EjecutanteRepository ejecutanteRepository;
-    private final AnalistaContableRepository analistaContableRepository;
 
     // ────────────────────────────────────────────────────────
     // Métodos existentes (sin cambios)
@@ -40,7 +35,7 @@ public class DropdownServiceImpl implements DropdownService {
     public List<DropdownDTO> getClientes() {
         return clienteRepository.findByActivoTrueOrderByRazonSocialAsc()
                 .stream()
-                .map(c -> new DropdownDTO(c.getId(), c.getRazonSocial()))
+                .map(c -> new DropdownDTO(c.getIdCliente(), c.getRazonSocial()))
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +44,7 @@ public class DropdownServiceImpl implements DropdownService {
         // Asumiendo que tienes un método en AreaRepository que filtra por cliente
         return areaRepository.findByClienteIdAndActivoTrue(idCliente)
                 .stream()
-                .map(a -> new DropdownDTO(a.getId(), a.getNombre()))
+                .map(a -> new DropdownDTO(a.getIdArea(), a.getNombre()))
                 .collect(Collectors.toList());
     }
 
@@ -71,9 +66,9 @@ public class DropdownServiceImpl implements DropdownService {
 
     @Override
     public List<DropdownDTO> getSites() {
-        return siteRepository.findByActivoTrueOrderByNombreAsc()
+        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()
                 .stream()
-                .map(s -> new DropdownDTO(s.getIdSite(), s.getNombre()))
+                .map(s -> new DropdownDTO(s.getIdSite(), s.getCodigoSitio()))
                 .collect(Collectors.toList());
     }
 
@@ -112,44 +107,64 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
                 .collect(Collectors.toList());
     }
-
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
-        return coordinadorTiCwRepository.findByActivoTrueOrderByDescripcionAsc()
+        return trabajadorRepository
+                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("COORDINADOR TI CW")
                 .stream()
-                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getApellidos() + " " + t.getNombres()
+                ))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DropdownDTO> getJefaturasResponsable() {
-        return jefaturaResponsableRepository.findByActivoTrueOrderByDescripcionAsc()
+        return trabajadorRepository
+                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("JEFATURA RESPONSABLE")
                 .stream()
-                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getApellidos() + " " + t.getNombres()
+                ))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DropdownDTO> getLiquidador() {
-        return liquidadorRepository.findByActivoTrueOrderByDescripcionAsc()
+        return trabajadorRepository
+                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("LIQUIDADOR")
                 .stream()
-                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getApellidos() + " " + t.getNombres()
+                ))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DropdownDTO> getEjecutantes() {
-        return ejecutanteRepository.findByActivoTrueOrderByDescripcionAsc()
+        return trabajadorRepository
+                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("EJECUTANTE")
                 .stream()
-                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getApellidos() + " " + t.getNombres()
+                ))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<DropdownDTO> getAnalistasContable() {
-        return analistaContableRepository.findByActivoTrueOrderByDescripcionAsc()
+        return trabajadorRepository
+                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("ANALISTA CONTABLE")
                 .stream()
-                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getApellidos() + " " + t.getNombres()
+                ))
                 .collect(Collectors.toList());
     }
+
 }

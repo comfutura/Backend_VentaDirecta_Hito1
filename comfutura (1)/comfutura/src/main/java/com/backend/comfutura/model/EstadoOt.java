@@ -4,22 +4,22 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "coordinador_ti_cw")
+@Table(name = "estado_ot")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
-public class CoordinadorTiCwPextEnergia {
+public class EstadoOt {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @Column(name = "id_estado_ot")
+    private Integer idEstadoOt;
 
-    @Column(nullable = false, length = 150)
+    @Column(name = "descripcion", nullable = false, unique = true, length = 100)
     private String descripcion;
 
-    @Column(nullable = false)
+    @Column(name = "activo")
     private Boolean activo = true;
 }

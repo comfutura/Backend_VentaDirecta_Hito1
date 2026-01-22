@@ -5,7 +5,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "usuario")
@@ -18,7 +17,7 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
-    private Integer id;
+    private Integer idUsuario;
 
     @Column(unique = true, nullable = false)
     private String username;
@@ -30,19 +29,14 @@ public class Usuario {
     @JoinColumn(name = "id_trabajador")
     private Trabajador trabajador;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_nivel")
+    private Nivel nivel;
+
     @Column(nullable = false)
     private boolean activo = true;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime fechaCreacion;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "usuario_rol",
-            joinColumns = @JoinColumn(name = "id_usuario"),
-            inverseJoinColumns = @JoinColumn(name = "id_rol")
-    )
-    private List<Rol> roles;
-
 }

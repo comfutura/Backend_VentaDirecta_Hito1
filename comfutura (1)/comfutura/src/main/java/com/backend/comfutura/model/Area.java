@@ -13,7 +13,7 @@ public class Area {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_area")
-    private Integer id;
+    private Integer idArea;
     @ManyToMany
     @JoinTable(
             name = "cliente_area",  // nombre exacto de tu tabla intermedia
