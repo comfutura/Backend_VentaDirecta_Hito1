@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/api/dropdowns/**",
                                 "/api/ordenes-compra/**",
                                 "/api/ots/**",
+                                "/api/proyectos/**",
                                 "/api/analista-cliente-solicitante/**",
                                 "/api/jefatura-cliente-solicitante/**",
                                 "/v3/api-docs/**",
