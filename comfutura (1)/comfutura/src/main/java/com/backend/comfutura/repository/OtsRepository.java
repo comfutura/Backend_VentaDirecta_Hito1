@@ -4,22 +4,21 @@ import com.backend.comfutura.model.Ots;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;  // ← AGREGAR ESTA IMPORTACIÓN
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface OtsRepository extends JpaRepository<Ots, Integer> {
+public interface OtsRepository extends JpaRepository<Ots, Integer>, JpaSpecificationExecutor<Ots> {
 
     Optional<Ots> findByOt(Integer ot);
 
     Page<Ots> findByActivo(Boolean activo, Pageable pageable);
 
-    // Método necesario para generar el siguiente número de OT
     Optional<Ots> findTopByOrderByOtDesc();
 
-    // Detalle completo con todas las relaciones
     @Query("SELECT o FROM Ots o " +
             "LEFT JOIN FETCH o.cliente " +
             "LEFT JOIN FETCH o.area " +
@@ -37,7 +36,6 @@ public interface OtsRepository extends JpaRepository<Ots, Integer> {
             "LEFT JOIN FETCH o.analistaClienteSolicitante " +
             "WHERE o.idOts = :idOts")
     Optional<Ots> findByIdWithAllRelations(@Param("idOts") Integer idOts);
-    List<Ots> findByActivoTrueOrderByOtAsc();
 
     @Query("SELECT o FROM Ots o " +
             "LEFT JOIN FETCH o.cliente " +
@@ -56,5 +54,6 @@ public interface OtsRepository extends JpaRepository<Ots, Integer> {
             "LEFT JOIN FETCH o.analistaClienteSolicitante " +
             "WHERE o.ot = :ot")
     Optional<Ots> findByOtWithAllRelations(@Param("ot") Integer ot);
-}
 
+    List<Ots> findByActivoTrueOrderByOtAsc();
+}

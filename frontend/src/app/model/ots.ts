@@ -1,70 +1,94 @@
 // src/app/core/models/ots.ts
 
-// Respuesta principal (listado y detalle)
-export interface OtResponse {
+// DTO para el listado en tabla (liviano pero con idOts y activo)
+export interface OtListDto {
   idOts: number;
   ot: number;
-  descripcion: string;
-  fechaApertura?: string | null;       // ISO date string o null
-  diasAsignados: number;               // calculado en backend
-  activo: boolean;
-  fechaCreacion: string;               // ISO timestamp
-
-  // Relaciones con nombres
-  clienteRazonSocial?: string | null;
-  areaNombre?: string | null;
-  proyectoNombre?: string | null;
+  fechaApertura?: string | null;
+  estadoOt?: string | null;
+  regionNombre?: string | null;
+  siteNombre?: string | null;
   faseNombre?: string | null;
-  siteNombre?: string | null;          // ahora es codigo_sitio
+  descripcion?: string | null;
+  activo: boolean;
+}
+
+// DTO para detalle completo (vista de detalle) - AHORA CON TODOS LOS IDs
+export interface OtDetailResponse {
+  idOts: number;
+  ot: number;
+  idOtsAnterior?: number | null;
+
+  descripcion: string;
+  fechaApertura?: string | null;
+  diasAsignados: number;
+  fechaCreacion: string;
+  activo: boolean;
+
+  // Entidades relacionadas (IDs + nombres)
+  idCliente?: number | null;
+  clienteRazonSocial?: string | null;
+
+  idArea?: number | null;
+  areaNombre?: string | null;
+
+  idProyecto?: number | null;
+  proyectoNombre?: string | null;
+
+  idFase?: number | null;
+  faseNombre?: string | null;
+
+  idSite?: number | null;
+  siteNombre?: string | null;
+
+  idRegion?: number | null;
   regionNombre?: string | null;
 
-  // Responsables del cliente
-  jefaturaClienteSolicitante?: string | null;
-  analistaClienteSolicitante?: string | null;
+  idJefaturaClienteSolicitante?: number | null;
+  jefaturaClienteSolicitanteNombre?: string | null;
 
-  // Responsables internos (nombres completos)
-  coordinadorTiCw?: string | null;
-  jefaturaResponsable?: string | null;
-  liquidador?: string | null;
-  ejecutante?: string | null;
-  analistaContable?: string | null;
+  idAnalistaClienteSolicitante?: number | null;
+  analistaClienteSolicitanteNombre?: string | null;
 
-  // Estado
+  idCreador?: number | null;
+  creadorNombre?: string | null;
+
+  idCoordinadorTiCw?: number | null;
+  coordinadorTiCwNombre?: string | null;
+
+  idJefaturaResponsable?: number | null;
+  jefaturaResponsableNombre?: string | null;
+
+  idLiquidador?: number | null;
+  liquidadorNombre?: string | null;
+
+  idEjecutante?: number | null;
+  ejecutanteNombre?: string | null;
+
+  idAnalistaContable?: number | null;
+  analistaContableNombre?: string | null;
+
   estadoOt?: string | null;
-
-  // Trabajadores asignados
-  trabajadoresAsignados: TrabajadorEnOtDto[];
 }
 
-export interface TrabajadorEnOtDto {
-  idTrabajador: number;
-  nombresCompletos: string;
-  cargoNombre?: string | null;
-  areaNombre?: string | null;
-  rolEnOt: string;
-  activo?: boolean;
-}
-
-// Request para crear/editar OT completa
-export interface CrearOtCompletaRequest {
-  ot: OtCreateRequest;
-  trabajadores?: Array<{ idTrabajador: number; rolEnOt: string }>;
-  detalles?: Array<OtDetalleRequest>; // si usas ítems/materiales
-}
-
+// Request para crear / editar OT (sin cambios, está bien)
 export interface OtCreateRequest {
-  idOts?: number;                      // para edición
+  idOts?: number;
   idOtsAnterior?: number | null;
+
   idCliente: number;
   idArea: number;
   idProyecto: number;
   idFase: number;
   idSite: number;
   idRegion: number;
+
   descripcion?: string;
-  fechaApertura?: string;              // 'YYYY-MM-DD'
+  fechaApertura?: string;
+
   idJefaturaClienteSolicitante?: number | null;
   idAnalistaClienteSolicitante?: number | null;
+
   idCoordinadorTiCw?: number | null;
   idJefaturaResponsable?: number | null;
   idLiquidador?: number | null;
@@ -72,14 +96,7 @@ export interface OtCreateRequest {
   idAnalistaContable?: number | null;
 }
 
-export interface OtDetalleRequest {
-  idMaestro: number;
-  idProveedor: number;
-  cantidad: number;
-  precioUnitario: number;
-}
-
-// Para paginación genérica
+// Paginación genérica (sin cambios)
 export interface Page<T> {
   content: T[];
   pageable: {

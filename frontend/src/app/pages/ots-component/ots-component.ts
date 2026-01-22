@@ -1,20 +1,16 @@
-// src/app/pages/ots-component/ots-component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
-import { OtResponse, Page } from '../../model/ots'; // Ajusta la ruta
+import { OtListDto, Page } from '../../model/ots';
 import { OtService } from '../../service/ot.service';
 
 @Component({
   selector: 'app-ots-component',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './ots-component.html',
   styleUrl: './ots-component.css'
 })
@@ -22,33 +18,15 @@ export class OtsComponent implements OnInit {
   private otService = inject(OtService);
   private router = inject(Router);
 
-  // Columnas visibles en la tabla (ajustadas al nuevo OtResponse)
-  displayedColumns: string[] = [
-    'ot',
-    'descripcion',
-    'clienteRazonSocial',
-    'siteNombre',
-    'estadoOt',
-    'diasAsignados',
-    'activo',
-    'acciones'
-  ];
-
-  // Datos
-  otsPage: Page<OtResponse> | null = null;
-  dataSource: OtResponse[] = [];
+  otsPage: Page<OtListDto> | null = null;
+  dataSource: OtListDto[] = [];
 
   pageSize = 10;
   pageIndex = 0;
   totalElements = 0;
   totalPages = 0;
 
-  // Filtros
-  activoFilter: 'todas' | 'activas' | 'inactivas' = 'activas';
-  otFilter: number | null = null;
-  sortField = 'idOts';
-  sortDirection = 'desc';
-
+  searchText: string = '';
   loading = false;
   errorMessage: string | null = null;
 
@@ -60,17 +38,11 @@ export class OtsComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
 
-    let activoParam: boolean | null = null;
-    if (this.activoFilter === 'activas') activoParam = true;
-    else if (this.activoFilter === 'inactivas') activoParam = false;
-
-    const sort = `${this.sortField},${this.sortDirection}`;
-
     this.otService.listarOts(
-      activoParam,
+      this.searchText.trim() || undefined,
       page,
       this.pageSize,
-      sort
+      'ot,desc'
     ).subscribe({
       next: (pageData) => {
         this.otsPage = pageData;
@@ -82,29 +54,17 @@ export class OtsComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        this.errorMessage = err.message || 'No se pudieron cargar las órdenes de trabajo';
+        this.errorMessage = err.message || 'Error al cargar las OTs';
         this.loading = false;
       }
     });
   }
 
-  // Filtros
-  onFilterChange(): void {
+  onSearchChange(): void {
     this.pageIndex = 0;
     this.loadOts();
   }
 
-  onOtFilterChange(value: string): void {
-    this.otFilter = value.trim() ? parseInt(value, 10) : null;
-    this.onFilterChange();
-  }
-
-  clearOtFilter(): void {
-    this.otFilter = null;
-    this.onFilterChange();
-  }
-
-  // Paginación
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages || page === this.pageIndex) return;
     this.pageIndex = page;
@@ -117,22 +77,16 @@ export class OtsComponent implements OnInit {
   goToNext(): void { if (this.pageIndex < this.totalPages - 1) this.goToPage(this.pageIndex + 1); }
 
   changePageSize(newSize: number): void {
-    if (newSize === this.pageSize) return;
     this.pageSize = newSize;
     this.pageIndex = 0;
     this.loadOts();
   }
 
   get visiblePages(): number[] {
-    const pages: number[] = [];
     const range = 2;
-    let start = Math.max(0, this.pageIndex - range);
-    let end = Math.min(this.totalPages - 1, this.pageIndex + range);
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
+    const start = Math.max(0, this.pageIndex - range);
+    const end = Math.min(this.totalPages - 1, this.pageIndex + range);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
   // Acciones
@@ -140,51 +94,45 @@ export class OtsComponent implements OnInit {
     this.router.navigate(['/ot/nuevo']);
   }
 
-  goToEdit(ot: OtResponse): void {
+  goToEdit(ot: OtListDto): void {
     this.router.navigate(['/ot/editar', ot.idOts]);
   }
 
-  viewDetail(ot: OtResponse): void {
+  viewDetail(ot: OtListDto): void {
     this.router.navigate(['/ot', ot.idOts]);
   }
 
-  toggleEstado(ot: OtResponse): void {
-    const nuevoEstado = ot.activo ? 'inactiva' : 'activa';
+  toggleEstado(ot: OtListDto): void {
     const accion = ot.activo ? 'desactivar' : 'activar';
+    const nuevoEstado = ot.activo ? 'inactiva' : 'activa';
 
     Swal.fire({
-      title: `¿${accion.toUpperCase()} esta OT?`,
-      html: `La orden <strong>#${ot.ot}</strong> pasará a estado <strong>${nuevoEstado}</strong>`,
+      title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} esta OT?`,
+      html: `La OT <strong>#${ot.ot}</strong> pasará a estado <strong>${nuevoEstado}</strong>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: ot.activo ? '#dc3545' : '#28a745',
       cancelButtonColor: '#6c757d',
       confirmButtonText: `Sí, ${accion}`,
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (!result.isConfirmed) return;
 
-      this.otService.toggleEstado(ot.idOts).subscribe({
+      this.otService.toggleActivo(ot.idOts!).subscribe({
         next: () => {
           Swal.fire({
             icon: 'success',
             title: '¡Éxito!',
-            text: `La OT #${ot.ot} ahora está ${nuevoEstado}`,
-            timer: 2200,
-            showConfirmButton: false,
+            text: `OT #${ot.ot} ahora está ${nuevoEstado}`,
+            timer: 2500,
             toast: true,
-            position: 'top-end'
+            position: 'top-end',
+            showConfirmButton: false
           });
-          this.loadOts();
+          this.loadOts(); // recarga la lista
         },
         error: (err) => {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: err.message || 'No se pudo cambiar el estado',
-            confirmButtonColor: '#dc3545'
-          });
+          Swal.fire('Error', err.message || 'No se pudo cambiar el estado', 'error');
         }
       });
     });

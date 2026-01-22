@@ -1,3 +1,4 @@
+// OtFullResponse.java  →  para edición (solo IDs + campos editables)
 package com.backend.comfutura.dto.response;
 
 import lombok.Builder;
@@ -5,13 +6,10 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
-// Para formulario de edición (solo IDs + datos básicos)
 @Data
 @Builder
-public class OtFullResponse {   // o renombrar a OtEditResponse
-
+public class OtFullResponse {
     private Integer idOts;
     private Integer ot;
     private Integer idOtsAnterior;
@@ -26,12 +24,10 @@ public class OtFullResponse {   // o renombrar a OtEditResponse
     private String descripcion;
     private LocalDate fechaApertura;
 
-    // Solicitante cliente
     private Integer idJefaturaClienteSolicitante;
     private Integer idAnalistaClienteSolicitante;
 
-    // Responsables CW (IDs)
-    private Integer idCreador;                    // ← importante: readonly en frontend
+    private Integer idCreador;                    // readonly
     private Integer idCoordinadorTiCw;
     private Integer idJefaturaResponsable;
     private Integer idLiquidador;
