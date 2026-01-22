@@ -1,0 +1,23 @@
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.badge.rounded-pill {
+  font-weight: 500;
+  min-width: 110px;
+  text-align: center;
+}
+
+.input-group .form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13,110,253,.15);
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
+}
