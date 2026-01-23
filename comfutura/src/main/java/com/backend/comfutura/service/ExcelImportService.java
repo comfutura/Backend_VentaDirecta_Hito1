@@ -597,50 +597,79 @@ public class ExcelImportService {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            // Hoja principal de plantilla
-            Sheet plantillaSheet = workbook.createSheet("Plantilla Importación");
+            Sheet sheet = workbook.createSheet("Plantilla Importación");
 
-            // Crear encabezados con colores
-            Row headerRow = plantillaSheet.createRow(0);
+            // ENCABEZADOS EXACTOS que el backend espera (sin acentos, sin espacios)
             String[] headers = {
-                    "Descripción *",
-                    "Fecha Apertura * (dd/mm/aaaa)",
-                    "Cliente *",
-                    "Área *",
-                    "Proyecto *",
-                    "Fase *",
-                    "Site *",
-                    "Región *",
-                    "Días Asignados *",
-                    "Estado *",
-                    "OT Anterior (opcional)",
-                    "Jefatura Cliente (opcional)",
-                    "Analista Cliente (opcional)"
+                    "descripcion",      // sin acento, minúscula
+                    "fechaapertura",    // sin espacio, minúscula
+                    "cliente",          // minúscula
+                    "area",             // sin acento, minúscula
+                    "proyecto",         // minúscula
+                    "fase",             // minúscula
+                    "site",             // minúscula
+                    "region",           // sin acento, minúscula
+                    "diasasignados",    // sin espacio, minúscula
+                    "estado",           // minúscula
+                    "otanterior",       // sin espacio, minúscula (opcional)
+                    "jefaturacliente",  // sin espacio, minúscula (opcional)
+                    "analistacliente"   // sin espacio, minúscula (opcional)
             };
 
-            CellStyle headerStyle = crearEstiloEncabezado(workbook);
+            Row headerRow = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
-                cell.setCellStyle(headerStyle);
+
+                // Estilo para encabezados
+                CellStyle style = workbook.createCellStyle();
+                Font font = workbook.createFont();
+                font.setBold(true);
+                style.setFont(font);
+                cell.setCellStyle(style);
             }
 
-            // Agregar filas de ejemplo
-            agregarFilasEjemplo(plantillaSheet);
-
-            // Crear hojas de referencia
-            crearHojasReferencia(workbook);
+            // Ejemplo de datos
+            Row exampleRow = sheet.createRow(1);
+            exampleRow.createCell(0).setCellValue("Instalación de equipos");
+            exampleRow.createCell(1).setCellValue("15/01/2026"); // Formato texto
+            exampleRow.createCell(2).setCellValue("Cliente Ejemplo S.A.");
+            exampleRow.createCell(3).setCellValue("TI");
+            exampleRow.createCell(4).setCellValue("Proyecto Digital");
+            exampleRow.createCell(5).setCellValue("Implementación");
+            exampleRow.createCell(6).setCellValue("LIMA01");
+            exampleRow.createCell(7).setCellValue("Lima");
+            exampleRow.createCell(8).setCellValue(15);
+            exampleRow.createCell(9).setCellValue("ASIGNACION");
+            exampleRow.createCell(10).setCellValue("20240099");
+            exampleRow.createCell(11).setCellValue("Juan Pérez");
+            exampleRow.createCell(12).setCellValue("María Gómez");
 
             // Autoajustar columnas
             for (int i = 0; i < headers.length; i++) {
-                plantillaSheet.autoSizeColumn(i);
+                sheet.autoSizeColumn(i);
             }
+
+            // Hoja de instrucciones
+            Sheet instruccionesSheet = workbook.createSheet("Instrucciones");
+            instruccionesSheet.createRow(0).createCell(0).setCellValue("INSTRUCCIONES IMPORTANTES:");
+
+            String[] instrucciones = {
+                    "NO modificar los nombres de las columnas (fila 1)",
+                    "Fechaapertura: Formato dd/mm/aaaa (ej: 15/01/2026)",
+                    "Diasasignados: Número entero (ej: 15)",
+                    "Estado: Solo ASIGNACION, EN PROCESO, FINALIZADA o CANCELADA",
+                    "Campos obligatorios: Todos excepto otanterior, jefaturacliente y analistacliente",
+                    "Guardar como archivo .xlsx"
+            };
+
+            for (int i = 0; i < instrucciones.length; i++) {
+                instruccionesSheet.createRow(i + 1).createCell(0).setCellValue(instrucciones[i]);
+            }
+            instruccionesSheet.autoSizeColumn(0);
 
             workbook.write(outputStream);
             return outputStream.toByteArray();
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error generando plantilla", e);
         }
     }
 

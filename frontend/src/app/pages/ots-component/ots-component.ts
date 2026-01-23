@@ -592,14 +592,68 @@ export(): void {
     });
   }
 
-  downloadTemplate(): void {
-    this.excelService.downloadTemplate().subscribe({
-      next: (blob) => {
-        this.excelService.downloadExcel(blob, 'plantilla_importacion_ots.xlsx');
-      },
-      error: (err) => Swal.fire('Error', 'No se pudo descargar la plantilla', 'error')
-    });
-  }
+  // Método simplificado sin xlsx
+downloadTemplate(): void {
+  this.excelService.downloadTemplate().subscribe({
+    next: (blob) => {
+      this.excelService.downloadExcel(blob, 'plantilla_importacion_ots.xlsx');
+
+      Swal.fire({
+        icon: 'info',
+        title: 'Plantilla descargada',
+        html: `<div class="text-start">
+                <strong>Instrucciones importantes:</strong><br><br>
+                1. <strong>NO modificar los nombres de las columnas</strong> (fila 1)<br>
+                2. Usa los encabezados exactos en minúsculas<br>
+                3. Fechaapertura: Formato dd/mm/aaaa<br>
+                4. Guardar como archivo .xlsx<br><br>
+                <small class="text-muted">Los encabezados deben ser exactos</small>
+              </div>`,
+        confirmButtonText: 'Entendido'
+      });
+    },
+    error: (err) => {
+      Swal.fire('Error', 'No se pudo descargar la plantilla', 'error');
+    }
+  });
+}
+
+// Mostrar ayuda específica
+showImportHelp(): void {
+  Swal.fire({
+    title: 'Encabezados requeridos',
+    html: `<div class="text-start">
+            <p>Los encabezados deben ser exactamente estos (fila 1):</p>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Columna</th>
+                  <th>Descripción</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>descripcion</code></td><td>Descripción de la OT</td></tr>
+                <tr><td><code>fechaapertura</code></td><td>Fecha (dd/mm/aaaa)</td></tr>
+                <tr><td><code>cliente</code></td><td>Nombre del cliente</td></tr>
+                <tr><td><code>area</code></td><td>Área del cliente</td></tr>
+                <tr><td><code>proyecto</code></td><td>Nombre del proyecto</td></tr>
+                <tr><td><code>fase</code></td><td>Fase del proyecto</td></tr>
+                <tr><td><code>site</code></td><td>Código del sitio</td></tr>
+                <tr><td><code>region</code></td><td>Región</td></tr>
+                <tr><td><code>diasasignados</code></td><td>Número de días</td></tr>
+                <tr><td><code>estado</code></td><td>Estado de la OT</td></tr>
+              </tbody>
+            </table>
+            <p class="text-muted small">Importante: Todo en minúsculas, sin espacios, sin acentos</p>
+          </div>`,
+    width: 600,
+    confirmButtonText: 'Descargar plantilla'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.downloadTemplate();
+    }
+  });
+}
 
   closeAllModals(): void {
     this.modalRefs.forEach(modal => modal.dismiss());
