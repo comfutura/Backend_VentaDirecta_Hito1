@@ -19,7 +19,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // Permite @PreAuthorize, @Secured, etc. en los métodos
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -29,23 +29,31 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())  // ya lo tienes
+                // 1. Deshabilitar CSRF (ya lo tienes)
+                .csrf(csrf -> csrf.disable())
 
-                // ← Agrega CORS explícito en Security (más prioridad que WebMvcConfigurer)
+                // 2. CORS – ponlo ANTES de authorizeHttpRequests (importante el orden)
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:4201","https://comfutura.up.railway.app"));
+                    config.setAllowedOrigins(List.of(
+                            "http://localhost:4200",
+                            "http://localhost:4201",
+                            "https://comfutura.up.railway.app"
+                    ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
-                    config.setAllowCredentials(true);
                     config.setExposedHeaders(List.of("Authorization", "Content-Type"));
+                    config.setAllowCredentials(true);
                     config.setMaxAge(3600L);
                     return config;
                 }))
 
-                // ← Crucial: permite OPTIONS en TODAS las rutas (preflight)
+                // 3. Autorizaciones – permite OPTIONS en TODAS las rutas ANTES que cualquier otra regla
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()   // ← Esto resuelve la mayoría de 403 en preflight
+                        // Esto debe ir PRIMERO
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Rutas públicas
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/dropdowns/**",
@@ -62,15 +70,19 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/webjars/**"
                         ).permitAll()
+
+                        // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
 
+                // 4. Session stateless + JWT filter
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
