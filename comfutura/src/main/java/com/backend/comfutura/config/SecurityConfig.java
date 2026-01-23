@@ -1,3 +1,4 @@
+// SecurityConfig.java - VERSIÓN CORREGIDA
 package com.backend.comfutura.config;
 
 import lombok.RequiredArgsConstructor;
@@ -13,9 +14,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -29,26 +27,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Deshabilitar CSRF (ya lo tienes)
+                // 1. Deshabilitar CSRF
                 .csrf(csrf -> csrf.disable())
 
-                // 2. CORS – ponlo ANTES de authorizeHttpRequests (importante el orden)
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of(
-                            "http://localhost:4200",
-                            "http://localhost:4201",
-                            "https://comfutura.up.railway.app"
-                    ));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-                    config.setAllowedHeaders(List.of("*"));
-                    config.setExposedHeaders(List.of("Authorization", "Content-Type"));
-                    config.setAllowCredentials(true);
-                    config.setMaxAge(3600L);
-                    return config;
-                }))
+                // 2. NO configures CORS aquí, déjalo que use la configuración global
+                .cors(cors -> {}) // Esto vacío usa la configuración global
 
-                // 3. Autorizaciones – permite OPTIONS en TODAS las rutas ANTES que cualquier otra regla
+                // 3. Autorizaciones
                 .authorizeHttpRequests(auth -> auth
                         // Esto debe ir PRIMERO
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -59,6 +44,7 @@ public class SecurityConfig {
                                 "/api/dropdowns/**",
                                 "/api/ordenes-compra/**",
                                 "/api/ots/**",
+                                "/api/excel/**",
                                 "/api/analista-cliente-solicitante/**",
                                 "/api/jefatura-cliente-solicitante/**",
                                 "/api/empresas/**",
@@ -76,7 +62,9 @@ public class SecurityConfig {
                 )
 
                 // 4. Session stateless + JWT filter
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

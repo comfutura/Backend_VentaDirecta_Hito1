@@ -28,6 +28,7 @@ public class DropdownServiceImpl implements DropdownService {
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteSolicitanteRepository;
+    private final EstadoOtRepository estadoOtRepository; // <-- AGREGAR este repositorio
 
     // ────────────────────────────────────────────────────────
     // Métodos existentes (sin cambios)
@@ -40,7 +41,21 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(c -> new DropdownDTO(c.getIdCliente(), c.getRazonSocial()))
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<DropdownDTO> getAreas() {
+        return areaRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(a -> new DropdownDTO(a.getIdArea(), a.getNombre()))
+                .collect(Collectors.toList());
+    }
 
+    @Override
+    public List<DropdownDTO> getEstadosOt() {
+        return estadoOtRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(e -> new DropdownDTO(e.getIdEstadoOt(), e.getDescripcion()))
+                .collect(Collectors.toList());
+    }
     @Override
     public List<DropdownDTO> getAreasByCliente(Integer idCliente) {
         // Asumiendo que tienes un método en AreaRepository que filtra por cliente
@@ -92,9 +107,13 @@ public class DropdownServiceImpl implements DropdownService {
     public List<DropdownDTO> getSites() {
         return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()
                 .stream()
-                .map(s -> new DropdownDTO(s.getIdSite(), s.getCodigoSitio()))
+                .map(s -> new DropdownDTO(
+                        s.getIdSite(),
+                        s.getCodigoSitio() + " - " + s.getDescripcion()
+                ))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<DropdownDTO> getRegiones() {

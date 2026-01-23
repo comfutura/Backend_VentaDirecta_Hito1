@@ -7,6 +7,8 @@ import com.backend.comfutura.dto.response.OtListDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface OtService {
 
     Page<OtListDto> listarOts(String search, Pageable pageable);
@@ -18,4 +20,6 @@ public interface OtService {
     OtDetailResponse saveOt(OtCreateRequest request);
 
     void toggleActivo(Integer idOts);
+
+    List<OtDetailResponse> saveOtsMasivo(List<OtCreateRequest> requests);
 }

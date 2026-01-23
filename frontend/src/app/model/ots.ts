@@ -1,6 +1,7 @@
 // src/app/core/models/ots.ts
 
 // DTO para el listado en tabla (liviano pero con idOts y activo)
+// src/app/core/models/ots.ts
 export interface OtListDto {
   idOts: number;
   ot: number;
@@ -11,6 +12,7 @@ export interface OtListDto {
   faseNombre?: string | null;
   descripcion?: string | null;
   activo: boolean;
+  clienteNombre?: string | null;
 }
 
 // DTO para detalle completo (vista de detalle) - AHORA CON TODOS LOS IDs

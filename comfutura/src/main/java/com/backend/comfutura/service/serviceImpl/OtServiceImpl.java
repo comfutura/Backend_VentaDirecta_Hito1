@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.Optional.ofNullable;
 
@@ -288,7 +290,22 @@ public class OtServiceImpl implements OtService {
         ot.setActivo(!ot.getActivo());
         otsRepository.save(ot);
     }
+    @Transactional
+    public List<OtDetailResponse> saveOtsMasivo(List<OtCreateRequest> requests) {
+        List<OtDetailResponse> responses = new ArrayList<>();
 
+        for (OtCreateRequest request : requests) {
+            try {
+                OtDetailResponse response = saveOt(request);
+                responses.add(response);
+            } catch (Exception e) {
+                // Continuar con las demás OTs si una falla
+                System.err.println("Error guardando OT: " + e.getMessage());
+            }
+        }
+
+        return responses;
+    }
     // HELPERS
     private Integer getCurrentTrabajadorId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
