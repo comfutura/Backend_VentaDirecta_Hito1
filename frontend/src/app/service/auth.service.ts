@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import { environment } from '../../environment';
 
 export interface LoginRequest {
   username: string;
@@ -36,7 +37,8 @@ export class AuthService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
 
-  private readonly API_URL = 'http://localhost:8080/api/auth';
+    private API_URL = `${environment.baseUrl}/api/auth`;
+
   private readonly TOKEN_KEY = 'auth_token';
 
   private authState = new BehaviorSubject<AuthState>({
