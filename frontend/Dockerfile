@@ -1,34 +1,34 @@
-# ================= BUILD ANGULAR =================
+# ----------------------
+# Stage 1: Build Angular
+# ----------------------
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copiamos package.json y package-lock.json
+# Copiar package.json y package-lock.json primero (para cachear npm install)
 COPY package*.json ./
-
-# Instalamos dependencias
 RUN npm install
 
-# Copiamos todo el proyecto
+# Copiar el resto del código y hacer build de Angular
 COPY . .
-
-# Generamos el build de Angular en modo producción
 RUN npm run build -- --configuration production
 
-# ================= RUN IN NGINX =================
+# ----------------------
+# Stage 2: Nginx
+# ----------------------
 FROM nginx:alpine
 
-# Limpiamos el contenido por defecto de nginx
+# Limpiar la carpeta html por defecto
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copiamos el build de Angular
+# Copiar el build de Angular desde el stage anterior
 COPY --from=build /app/dist/frontend /usr/share/nginx/html
 
-# Copiamos configuración custom de Nginx para SPA
+# Copiar configuración personalizada de nginx si tienes SPA fallback
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Exponemos el puerto 80
+# Exponer el puerto
 EXPOSE 80
 
-# Iniciamos Nginx
+# Comando por defecto para iniciar nginx
 CMD ["nginx", "-g", "daemon off;"]
