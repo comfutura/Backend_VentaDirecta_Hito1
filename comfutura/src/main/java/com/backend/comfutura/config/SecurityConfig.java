@@ -34,7 +34,7 @@ public class SecurityConfig {
                 // ← Agrega CORS explícito en Security (más prioridad que WebMvcConfigurer)
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:4201"));
+                    config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:4201","https://comfutura.up.railway.app"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
