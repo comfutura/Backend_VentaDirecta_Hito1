@@ -23,9 +23,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: DashboardComponent },
 
-      // ── Simplificado: todo OT se maneja desde un solo componente ──
       { path: 'ot', component: OtsComponent },
-
       { path: 'site', component: SiteComponent },
       { path: 'gestion-jefatura-analista', component: GestionCargosSolicitantesComponent },
       { path: 'orden-compra', component: OrdenCompraComponent },
