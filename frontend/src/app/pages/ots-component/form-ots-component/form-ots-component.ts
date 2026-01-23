@@ -1,6 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, tap } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -8,28 +8,36 @@ import Swal from 'sweetalert2';
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
 import { AuthService } from '../../../service/auth.service';
 import { OtService } from '../../../service/ot.service';
-import { OtCreateRequest, OtDetailResponse } from '../../../model/ots'; // ← OtDetailResponse para el retorno
+import { OtCreateRequest, OtDetailResponse } from '../../../model/ots';
 
 @Component({
-  selector: 'app-form-ots',
+  selector: 'app-ot-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
- templateUrl: './form-ots-component.html',
+  templateUrl: './form-ots-component.html',
   styleUrl: './form-ots-component.css'
 })
 export class FormOtsComponent implements OnInit {
+
   private fb = inject(FormBuilder);
   private otService = inject(OtService);
   private dropdownService = inject(DropdownService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-currentStep: number = 1;
+
+  @Input() otId: number | null = null;
+  @Input() isViewMode: boolean = false;
+
+  // Eventos que el padre (OtsComponent) va a escuchar
+  @Output() saved = new EventEmitter<void>();
+  @Output() canceled = new EventEmitter<void>();
+
+  currentStep: number = 1;
   form!: FormGroup;
   submitted = false;
   loading = true;
   isEditMode = false;
-  otId: number | null = null;
 
   usernameLogueado: string = '—';
   trabajadorIdLogueado: number | null = null;
@@ -59,18 +67,35 @@ currentStep: number = 1;
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-    // Detectar modo edición
-    const idParam = this.route.snapshot.paramMap.get('id');
-    this.isEditMode = !!idParam && !isNaN(Number(idParam));
-    this.otId = this.isEditMode ? Number(idParam) : null;
+    this.determinarModoOperacion();
+    this.suscribirCambiosFormulario();
 
     if (this.isEditMode && this.otId) {
       this.cargarDatosParaEdicion(this.otId);
-    } else {
+    } else if (!this.isEditMode) {
       this.cargarDropdownsParaCreacion();
     }
 
-    this.suscribirCambiosFormulario();
+    if (this.isViewMode) {
+      this.form.disable({ emitEvent: false });
+    }
+  }
+
+  private determinarModoOperacion(): void {
+    if (this.otId !== null) {
+      this.isEditMode = true;
+      return;
+    }
+
+    const idFromRoute = this.route.snapshot.paramMap.get('id');
+    if (idFromRoute && !isNaN(+idFromRoute)) {
+      this.otId = +idFromRoute;
+      this.isEditMode = true;
+      return;
+    }
+
+    this.isEditMode = false;
+    this.otId = null;
   }
 
   private crearFormularioBase(): void {
@@ -98,42 +123,41 @@ currentStep: number = 1;
       idOtsAnterior: [null, [Validators.min(1), Validators.pattern('^[0-9]+$')]]
     });
 
-    // En creación → descripción auto-generada y deshabilitada
     if (!this.isEditMode) {
-      this.form.get('descripcion')?.disable();
+      this.form.get('descripcion')?.disable({ emitEvent: false });
     }
   }
-// Propiedades calculadas para el resumen (Paso 3)
-get clienteNombre(): string {
-  return this.clientes.find(c => c.id === this.form.value.idCliente)?.label || '—';
-}
 
-get areaNombre(): string {
-  return this.areas.find(a => a.id === this.form.value.idArea)?.label || '—';
-}
+  // Getters para resumen visual
+  get clienteNombre(): string {
+    return this.clientes.find(c => c.id === this.form.value.idCliente)?.label || '—';
+  }
+  get areaNombre(): string {
+    return this.areas.find(a => a.id === this.form.value.idArea)?.label || '—';
+  }
+  get proyectoNombre(): string {
+    return this.proyectos.find(p => p.id === this.form.value.idProyecto)?.label || '—';
+  }
+  get faseNombre(): string {
+    return this.fases.find(f => f.id === this.form.value.idFase)?.label || '—';
+  }
+  get siteNombre(): string {
+    return this.sites.find(s => s.id === this.form.value.idSite)?.label || '—';
+  }
+  get regionNombre(): string {
+    return this.regiones.find(r => r.id === this.form.value.idRegion)?.label || '—';
+  }
+  get fechaAperturaFormatted(): string {
+    const fecha = this.form.value.fechaApertura;
+    return fecha ? new Date(fecha).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+  }
 
-get proyectoNombre(): string {
-  return this.proyectos.find(p => p.id === this.form.value.idProyecto)?.label || '—';
-}
+  // Tipado seguro para f (evita errores TS4111 si lo usas en template)
+  get f() {
+    return this.form.controls as { [K in keyof typeof this.form.value]: AbstractControl };
+  }
 
-get faseNombre(): string {
-  return this.fases.find(f => f.id === this.form.value.idFase)?.label || '—';
-}
-
-get siteNombre(): string {
-  return this.sites.find(s => s.id === this.form.value.idSite)?.label || '—';
-}
-
-get regionNombre(): string {
-  return this.regiones.find(r => r.id === this.form.value.idRegion)?.label || '—';
-}
-
-get fechaAperturaFormatted(): string {
-  const fecha = this.form.value.fechaApertura;
-  return fecha ? new Date(fecha).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
-}
   private suscribirCambiosFormulario(): void {
-    // Cascada: áreas según cliente
     this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
       const areaCtrl = this.form.get('idArea');
       if (clienteId) {
@@ -146,7 +170,6 @@ get fechaAperturaFormatted(): string {
       }
     });
 
-    // Generación automática de descripción (solo creación)
     if (!this.isEditMode) {
       ['idProyecto', 'idArea', 'idSite'].forEach(field => {
         this.form.get(field)?.valueChanges.subscribe(() => this.actualizarDescripcion());
@@ -165,24 +188,24 @@ get fechaAperturaFormatted(): string {
   }
 
   private cargarDatosParaEdicion(id: number): void {
+    this.loading = true;
     forkJoin({
-      ot: this.otService.getOtParaEdicion(id),  // Devuelve OtCreateRequest con IDs
+      ot: this.otService.getOtParaEdicion(id),
       catalogs: this.cargarTodosLosCatalogos()
     }).subscribe({
       next: ({ ot }) => {
-        // Patch directo porque /edit devuelve OtCreateRequest
         this.form.patchValue(ot);
-
-        // Forzar carga de áreas si hay cliente
         const clienteId = this.form.get('idCliente')?.value;
         if (clienteId) {
           this.cargarAreasPorCliente(clienteId);
         }
-
+        if (this.isViewMode) {
+          this.form.disable({ emitEvent: false });
+        }
         this.loading = false;
       },
       error: () => {
-        Swal.fire('Error', 'No se pudo cargar la OT para edición', 'error');
+        Swal.fire('Error', 'No se pudo cargar la información de la OT', 'error');
         this.router.navigate(['/ot']);
       }
     });
@@ -246,7 +269,8 @@ get fechaAperturaFormatted(): string {
     const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
 
     const toSlug = (str: string) =>
-      str.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+      str.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+        .replace(/_+/g, '_').replace(/^_+|_+$/g, '');
 
     const partes = [toSlug(proyecto), toSlug(area), v.idSite ? String(v.idSite) : '', toSlug(site)]
       .filter(Boolean);
@@ -254,8 +278,6 @@ get fechaAperturaFormatted(): string {
     const desc = partes.join('_') || 'OT sin descripción automática';
     this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
   }
-
-  get f() { return this.form.controls; }
 
   onSubmit(): void {
     this.submitted = true;
@@ -308,27 +330,43 @@ get fechaAperturaFormatted(): string {
       };
 
       this.otService.saveOt(payload).subscribe({
-        next: (res: OtDetailResponse) => {  // ← Cambiado a OtDetailResponse
+        next: (res: OtDetailResponse) => {
           Swal.fire({
             icon: 'success',
             title: this.isEditMode ? '¡OT actualizada!' : '¡OT creada con éxito!',
             html: `Número OT: <strong>#${res.ot}</strong>`,
-            timer: 2800,
+            timer: 2400,
             timerProgressBar: true,
             showConfirmButton: false
           });
-          setTimeout(() => this.router.navigate(['/ot', res.idOts]), 2800);
+
+          // Cierra el modal automáticamente
+          this.saved.emit();
+
+          // Redirección después del Swal
+          setTimeout(() => {
+            if (this.isEditMode) {
+              this.router.navigate(['/ot', res.idOts]);
+            } else {
+              this.router.navigate(['/ot']);
+            }
+          }, 2500);
         },
         error: (err) => {
           Swal.fire({
             icon: 'error',
             title: 'Error al guardar',
-            text: err.message || 'Ocurrió un problema inesperado',
+            text: err?.error?.message || 'Ocurrió un problema inesperado',
           });
           this.loading = false;
         }
       });
     });
+  }
+
+  // Método para cancelar (puedes llamarlo desde un botón "Cancelar")
+  onCancel(): void {
+    this.canceled.emit();
   }
 
   resetForm(): void {
@@ -348,7 +386,7 @@ get fechaAperturaFormatted(): string {
         this.form.reset();
         this.submitted = false;
         this.areas = [];
-        this.form.get('idArea')?.disable();
+        this.form.get('idArea')?.disable({ emitEvent: false });
         this.form.patchValue({
           fechaApertura: new Date().toISOString().split('T')[0]
         });

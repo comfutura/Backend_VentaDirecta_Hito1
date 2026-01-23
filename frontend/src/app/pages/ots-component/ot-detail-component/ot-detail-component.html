@@ -1,219 +1,199 @@
-<div class="container-fluid py-4 py-md-5">
-  <div class="card shadow-xl border-0 rounded-4 overflow-hidden bg-white">
+<!-- ot-detail.component.html -->
+<div class="container-fluid h-100 d-flex flex-column p-0">
+  <!-- Header (fijo en modal) -->
+  <div class="card-header bg-gradient-primary text-white py-4 py-md-5 px-4 px-md-5 rounded-top-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
+      <div class="flex-grow-1">
+        <h3 class="mb-1 fw-bold d-flex align-items-center gap-3">
+          <i class="bi bi-file-earmark-check fs-3"></i>
+          Orden de Trabajo #{{ ot?.ot ?? '——' }}
+        </h3>
+        <p class="mb-0 opacity-90 fs-5 fw-light">
+          {{ ot?.descripcion || 'Sin descripción' | slice:0:140 }}{{ (ot?.descripcion?.length ?? 0) > 140 ? '...' : '' }}
+        </p>
+      </div>
 
-    <!-- Header -->
-    <div class="card-header bg-gradient-primary text-white py-4 py-md-5 px-4 px-md-5">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-4">
-        <div>
-          <h3 class="mb-1 fw-bold">
-            <i class="bi bi-file-earmark-check me-3"></i>
-            Orden de Trabajo #{{ ot?.ot ?? '——' }}
-          </h3>
-          <p class="mb-0 opacity-85 fs-5">
-            {{ ot?.descripcion || 'Sin descripción' | slice:0:120 }}{{ (ot?.descripcion?.length ?? 0) > 120 ? '...' : '' }}
-          </p>
-        </div>
-
-        <div class="d-flex flex-wrap gap-3">
-          <span class="badge fs-5 px-4 py-2 fw-semibold"
-                [ngClass]="ot?.activo ? 'bg-success' : 'bg-danger'">
-            {{ ot?.activo ? 'Activa' : 'Inactiva' }}
-          </span>
-
-          <span class="badge bg-dark fs-5 px-4 py-2 fw-semibold">
-            {{ ot?.diasAsignados ?? '—' }} día{{ (ot?.diasAsignados ?? 0) !== 1 ? 's' : '' }}
-          </span>
-        </div>
+      <div class="d-flex flex-wrap gap-3">
+        <span class="badge fs-5 px-4 py-2 fw-semibold"
+              [ngClass]="ot?.activo ? 'bg-success' : 'bg-danger'">
+          {{ ot?.activo ? 'Activa' : 'Inactiva' }}
+        </span>
+        <span class="badge bg-dark-subtle text-dark fs-5 px-4 py-2 fw-semibold">
+          {{ ot?.diasAsignados ?? '—' }} día{{ (ot?.diasAsignados ?? 0) !== 1 ? 's' : '' }}
+        </span>
       </div>
     </div>
+  </div>
 
-    <!-- Timeline / Progreso de estados -->
-    <div class="bg-light border-bottom px-4 px-md-5 py-4">
-      <h5 class="text-center fw-bold mb-4 text-primary">
-        <i class="bi bi-diagram-3 me-2"></i> Flujo de la Orden de Trabajo
+  <!-- Timeline / Progreso -->
+  <div class="bg-light border-bottom px-4 px-md-5 py-4">
+    <h5 class="text-center fw-bold mb-4 text-primary">
+      <i class="bi bi-diagram-3 me-2"></i> Flujo de la OT
+    </h5>
+
+    <div class="d-flex flex-nowrap overflow-auto gap-4 pb-3" style="scrollbar-width: thin;">
+      <ng-container *ngFor="let estado of estados; let i = index">
+        <div class="text-center position-relative flex-shrink-0" style="min-width: 130px; max-width: 160px;">
+          <!-- Línea -->
+          <div class="position-absolute top-50 start-0 end-0 translate-middle-y rounded-pill"
+               [ngClass]="{
+                 'bg-success': i < currentEstadoIndex,
+                 'bg-primary': i === currentEstadoIndex,
+                 'bg-secondary opacity-50': i > currentEstadoIndex
+               }"
+               style="height: 5px; z-index: 1;"></div>
+
+          <!-- Círculo -->
+          <div class="position-relative mb-3" style="z-index: 2;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center shadow mx-auto"
+                 [ngClass]="getEstadoClass(i)"
+                 style="width: 48px; height: 48px; border: 4px solid white;">
+              <i class="bi fs-4" [ngClass]="getIconoEstado(i)"></i>
+            </div>
+          </div>
+
+          <div class="small fw-semibold mb-1"
+               [ngClass]="{
+                 'text-success': i < currentEstadoIndex,
+                 'text-primary fw-bold': i === currentEstadoIndex,
+                 'text-muted': i > currentEstadoIndex
+               }">
+            {{ estado }}
+          </div>
+
+          <span class="badge bg-white text-dark border fs-6 px-2 py-1">
+            {{ i + 1 }}
+          </span>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Contenido principal (scrollable) -->
+  <div class="card-body flex-grow-1 p-4 p-md-5 overflow-auto">
+    <ng-container *ngIf="loading">
+      <div class="text-center py-5 my-5">
+        <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status"></div>
+        <h5 class="mt-4 text-muted">Cargando detalle de la OT...</h5>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!loading && ot">
+      <div class="row g-4 g-lg-5">
+        <!-- Col 1: Datos básicos -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100 rounded-4">
+            <div class="card-body p-4">
+              <h5 class="card-title fw-bold text-primary mb-4">
+                <i class="bi bi-info-square me-2"></i> Datos Básicos
+              </h5>
+              <dl class="row g-3 mb-0">
+                <dt class="col-5 text-muted fw-semibold">ID Interno</dt>
+                <dd class="col-7">{{ ot.idOts }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Cliente</dt>
+                <dd class="col-7">{{ ot.clienteRazonSocial || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Área</dt>
+                <dd class="col-7">{{ ot.areaNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Proyecto</dt>
+                <dd class="col-7">{{ ot.proyectoNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Fase</dt>
+                <dd class="col-7">{{ ot.faseNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Site</dt>
+                <dd class="col-7">{{ ot.siteNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Región</dt>
+                <dd class="col-7">{{ ot.regionNombre || '—' }}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+   <!-- Col 2: Fechas y Estado -->
+<div class="col-lg-4">
+  <div class="card border-0 shadow-sm h-100 rounded-4">
+    <div class="card-body p-4">
+      <h5 class="card-title fw-bold text-primary mb-4">
+        <i class="bi bi-calendar-event me-2"></i> Fechas y Estado
       </h5>
+      <dl class="row g-3 mb-0">
+        <!-- Apertura -->
+        <dt class="col-5 text-muted fw-semibold">Apertura</dt>
+        <dd class="col-7">
+          {{ ot.fechaApertura ? (ot.fechaApertura | date:'dd/MM/yyyy') : '—' }}
+        </dd>
+        <dt class="col-5 text-muted fw-semibold">Creación</dt>
+        <dd class="col-7">
+          {{ ot.fechaCreacion ? (ot.fechaCreacion | date:'dd/MM/yyyy HH:mm') : '—' }}
+        </dd>
 
-      <div class="d-flex flex-nowrap overflow-auto pb-2" style="gap: 0.75rem;">
-        <ng-container *ngFor="let estado of estados; let i = index">
-          <div class="text-center position-relative flex-grow-1" style="min-width: 140px;">
-            <!-- Línea de conexión -->
-            <div class="position-absolute top-50 start-0 end-0 translate-middle-y"
-                 [ngClass]="{
-                   'bg-success': i < currentEstadoIndex,
-                   'bg-primary': i === currentEstadoIndex,
-                   'bg-secondary opacity-50': i > currentEstadoIndex
-                 }"
-                 style="height: 6px; z-index: 1;"></div>
+        <!-- Estado -->
+        <dt class="col-5 text-muted fw-semibold">Estado</dt>
+        <dd class="col-7">
+          <span class="badge fs-5 px-4 py-2 fw-semibold"
+                [ngClass]="getEstadoBadgeClass(ot.estadoOt)">
+            {{ ot.estadoOt || 'Sin estado' }}
+          </span>
+        </dd>
+      </dl>
+    </div>
+  </div>
+</div>
 
-            <!-- Círculo -->
-            <div class="position-relative d-inline-block mb-2" style="z-index: 2;">
-              <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow"
-                   [ngClass]="getEstadoClass(i)"
-                   style="width: 52px; height: 52px; border: 4px solid white;">
-                <i class="bi" [ngClass]="getIconoEstado(i)"></i>
-              </div>
-            </div>
 
-            <div class="small fw-semibold"
-                 [ngClass]="{
-                   'text-success': i < currentEstadoIndex,
-                   'text-primary fw-bold': i === currentEstadoIndex,
-                   'text-muted': i > currentEstadoIndex
-                 }">
-              {{ estado }}
-            </div>
-
-            <!-- Número -->
-            <div class="badge bg-white text-dark border mt-1 fs-6 px-2 py-1"
-                 style="font-size: 0.75rem;">
-              {{ i + 1 }}
+        <!-- Col 3: Responsables -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100 rounded-4">
+            <div class="card-body p-4">
+              <h5 class="card-title fw-bold text-primary mb-4">
+                <i class="bi bi-people-fill me-2"></i> Responsables
+              </h5>
+              <dl class="row g-3 mb-0">
+                <dt class="col-5 text-muted fw-semibold">Creador</dt>
+                <dd class="col-7">{{ ot.creadorNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Jefatura Cliente</dt>
+                <dd class="col-7">{{ ot.jefaturaClienteSolicitanteNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Analista Cliente</dt>
+                <dd class="col-7">{{ ot.analistaClienteSolicitanteNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Coord. TI/CW</dt>
+                <dd class="col-7">{{ ot.coordinadorTiCwNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Jefatura Resp.</dt>
+                <dd class="col-7">{{ ot.jefaturaResponsableNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Liquidador</dt>
+                <dd class="col-7">{{ ot.liquidadorNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Ejecutante</dt>
+                <dd class="col-7">{{ ot.ejecutanteNombre || '—' }}</dd>
+                <dt class="col-5 text-muted fw-semibold">Analista Contable</dt>
+                <dd class="col-7">{{ ot.analistaContableNombre || '—' }}</dd>
+              </dl>
             </div>
           </div>
-        </ng-container>
+        </div>
       </div>
-    </div>
+    </ng-container>
 
-    <!-- Contenido principal -->
-    <div class="card-body p-4 p-md-5">
-      <ng-container *ngIf="loading">
-        <div class="text-center py-5 my-5">
-          <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status"></div>
-          <h5 class="mt-4 text-muted">Cargando detalle de la OT...</h5>
-        </div>
-      </ng-container>
-
-      <ng-container *ngIf="!loading && ot">
-        <div class="row g-4 g-lg-5">
-
-          <!-- Columna 1: Datos básicos + Fechas -->
-          <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body">
-                <h5 class="card-title fw-bold text-primary mb-4">
-                  <i class="bi bi-info-square me-2"></i> Datos Básicos
-                </h5>
-
-                <dl class="row mb-0">
-                  <dt class="col-5 text-muted fw-semibold">ID Interno</dt>
-                  <dd class="col-7">{{ ot.idOts }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Cliente</dt>
-                  <dd class="col-7">{{ ot.clienteRazonSocial || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Área</dt>
-                  <dd class="col-7">{{ ot.areaNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Proyecto</dt>
-                  <dd class="col-7">{{ ot.proyectoNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Fase</dt>
-                  <dd class="col-7">{{ ot.faseNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Site</dt>
-                  <dd class="col-7">{{ ot.siteNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Región</dt>
-                  <dd class="col-7">{{ ot.regionNombre || '—' }}</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-
-          <!-- Columna 2: Fechas y Estado -->
-          <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body">
-                <h5 class="card-title fw-bold text-primary mb-4">
-                  <i class="bi bi-calendar-event me-2"></i> Fechas y Estado
-                </h5>
-
-                <dl class="row mb-0">
-                 <!-- Fechas -->
-<dt class="col-5 text-muted fw-semibold">Apertura</dt>
-<dd class="col-7">{{ ot.fechaApertura ? (ot.fechaApertura | date:'dd/MM/yyyy') : '—' }}</dd>
-
-<dt class="col-5 text-muted fw-semibold">Creación</dt>
-<dd class="col-7">{{ ot.fechaCreacion ? (ot.fechaCreacion | date:'dd/MM/yyyy HH:mm') : '—' }}</dd>
-
-<!-- Estado -->
-<dd class="col-7">
-  <span class="badge fs-5 px-4 py-2 fw-semibold"
-        [ngClass]="getEstadoBadgeClass(ot.estadoOt)">
-    {{ ot.estadoOt || 'Sin estado' }}
-  </span>
-</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-
-          <!-- Columna 3: Responsables -->
-          <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body">
-                <h5 class="card-title fw-bold text-primary mb-4">
-                  <i class="bi bi-people-fill me-2"></i> Responsables
-                </h5>
-
-                <dl class="row mb-0">
-                  <dt class="col-5 text-muted fw-semibold">Creador</dt>
-                  <dd class="col-7">{{ ot.creadorNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Jefatura Cliente</dt>
-                  <dd class="col-7">{{ ot.jefaturaClienteSolicitanteNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Analista Cliente</dt>
-                  <dd class="col-7">{{ ot.analistaClienteSolicitanteNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Coord. TI/CW</dt>
-                  <dd class="col-7">{{ ot.coordinadorTiCwNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Jefatura Resp.</dt>
-                  <dd class="col-7">{{ ot.jefaturaResponsableNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Liquidador</dt>
-                  <dd class="col-7">{{ ot.liquidadorNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Ejecutante</dt>
-                  <dd class="col-7">{{ ot.ejecutanteNombre || '—' }}</dd>
-
-                  <dt class="col-5 text-muted fw-semibold">Analista Contable</dt>
-                  <dd class="col-7">{{ ot.analistaContableNombre || '—' }}</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </ng-container>
-
-      <!-- No encontrado -->
-      <ng-container *ngIf="!loading && !ot">
-        <div class="alert alert-warning text-center py-5 my-5 shadow rounded-4 border-0">
-          <i class="bi bi-exclamation-triangle-fill fs-1 text-warning mb-3 d-block"></i>
-          <h4 class="mb-3">Orden de Trabajo no encontrada</h4>
-          <p class="lead text-muted mb-4">
-            El ID no existe, fue eliminada o no tienes permisos para verla.
-          </p>
-          <button class="btn btn-outline-primary btn-lg px-5" (click)="volver()">
-            Volver al listado
-          </button>
-        </div>
-      </ng-container>
-    </div>
-
-    <!-- Footer -->
-    <div class="card-footer bg-light border-0 py-4 px-5 text-center">
-      <div class="d-flex justify-content-center gap-4 flex-wrap">
-        <button class="btn btn-outline-secondary btn-lg px-5 py-3 fw-semibold" (click)="volver()">
-          <i class="bi bi-arrow-left me-2"></i> Volver al listado
-        </button>
-
-        <button *ngIf="ot" class="btn btn-primary btn-lg px-5 py-3 fw-semibold" (click)="editarOt()">
-          <i class="bi bi-pencil-square me-2"></i> Editar OT
+    <!-- No encontrado -->
+    <ng-container *ngIf="!loading && !ot">
+      <div class="alert alert-warning text-center py-5 my-5 shadow rounded-4 border-0">
+        <i class="bi bi-exclamation-triangle-fill fs-1 text-warning mb-3 d-block"></i>
+        <h4 class="mb-3">Orden de Trabajo no encontrada</h4>
+        <p class="lead text-muted mb-4">
+          El ID no existe, fue eliminada o no tienes permisos para verla.
+        </p>
+        <button class="btn btn-outline-primary btn-lg px-5" (click)="volver()">
+          Volver al listado
         </button>
       </div>
-    </div>
+    </ng-container>
+  </div>
 
+  <!-- Footer (siempre visible) -->
+  <div class="card-footer bg-light border-0 py-4 px-5 text-center mt-auto">
+    <div class="d-flex justify-content-center gap-4 flex-wrap">
+      <button class="btn btn-outline-secondary btn-lg px-5 py-3 fw-semibold" (click)="volver()">
+        <i class="bi bi-arrow-left me-2"></i> Volver
+      </button>
+      <button *ngIf="ot" class="btn btn-primary btn-lg px-5 py-3 fw-semibold" (click)="editarOt()">
+        <i class="bi bi-pencil-square me-2"></i> Editar OT
+      </button>
+    </div>
   </div>
 </div>

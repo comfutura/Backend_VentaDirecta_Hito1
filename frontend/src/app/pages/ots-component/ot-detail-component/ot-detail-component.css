@@ -50,3 +50,95 @@
 /* Estados en timeline */
 .bg-success-light { background-color: #d4edda !important; }
 .text-success-dark { color: #155724 !important; }
+/* ot-detail.component.css */
+
+/* Variables (consistentes con tu tema anterior) */
+:root {
+  --primary: #0d6efd;
+  --primary-dark: #0a58ca;
+  --success: #198754;
+  --danger: #dc3545;
+  --light: #f8f9fa;
+  --gray: #6c757d;
+}
+
+/* Gradiente header */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+/* Contenedor principal para ocupar todo el modal */
+:host {
+  display: block;
+  height: 100%;
+}
+
+/* Timeline mejoras */
+.overflow-auto {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) #e9ecef;
+}
+
+.overflow-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+}
+
+/* Cards internas */
+.card {
+  border-radius: 1rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08) !important;
+}
+
+/* Badges y estados */
+.badge.fs-5 {
+  font-size: 1.25rem !important;
+  min-width: 110px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .card-body {
+    padding: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.75rem !important;
+  }
+
+  .badge.fs-5 {
+    font-size: 1.1rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .px-4, .px-md-5 {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+
+  .py-4, .py-md-5 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .d-flex.flex-md-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .timeline .flex-shrink-0 {
+    min-width: 110px !important;
+  }
+}

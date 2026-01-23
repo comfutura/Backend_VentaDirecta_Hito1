@@ -1,115 +1,106 @@
-/* Fondo general suave */
-.bg-gradient-light {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+/* Fondo ocupa TODO el viewport */
+.full-screen-wrapper {
+  background: linear-gradient(145deg, #f0f4ff 0%, #e6f0ff 50%, #f8f9fa 100%);
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-/* Gradiente header más vibrante y moderno */
-.bg-gradient-primary {
+/* Header full-width, sin márgenes laterales innecesarios */
+.bg-gradient-header {
   background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 50%, #084298 100%);
+  width: 100%;
 }
 
-/* Card con sombra suave y borde redondeado */
-.card {
-  border-radius: 1.5rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 10px 20px rgba(0, 0, 0, 0.06) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Contenedor máximo (solo para centrar contenido en pantallas muy grandes) */
+.container-max {
+  width: 100%;
+  max-width: 1800px; /* puedes quitar esta línea si quieres 100% siempre */
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12) !important;
+/* Icono circular más grande y visible */
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  font-size: 1.8rem;
 }
 
-/* Form-floating mejorado - labels más bonitos y alineados */
+/* Barra de pasos full-width y más prominente */
+.steps-bar {
+  width: 100%;
+}
+
+.steps-bar .nav-link {
+  transition: all 0.35s ease;
+  font-size: 1.1rem;
+}
+
+.steps-bar .nav-link:hover:not(.active) {
+  background: rgba(255,255,255,0.3) !important;
+  transform: translateY(-3px);
+}
+
+.steps-bar .nav-link.active {
+  background: white !important;
+  color: #0d6efd !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  font-weight: 700;
+}
+
+/* Form-floating más espacioso y sin bordes innecesarios */
 .form-floating > .form-control,
 .form-floating > .form-select,
-.form-floating > textarea.form-control {
-  background-color: white !important;
+.form-floating > textarea {
+  border-radius: 0.9rem;
   border: 1px solid #d1d8e0;
-  border-radius: 0.75rem;
-  height: calc(3.6rem + 2px);
-  padding: 1.625rem 1rem 0.625rem 1rem;
-  transition: all 0.25s ease;
+  padding: 1.8rem 1.2rem 0.7rem;
+  font-size: 1.05rem;
+  background-color: rgba(255,255,255,0.98);
 }
 
 .form-floating > label {
-  color: #6c757d;
-  padding: 1rem 1rem;
-  transition: all 0.25s ease;
-}
-
-.form-floating > .form-control:focus,
-.form-floating > .form-control:not(:placeholder-shown),
-.form-floating > .form-select {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.12);
-}
-
-.form-floating > .form-control:focus ~ label,
-.form-floating > .form-control:not(:placeholder-shown) ~ label,
-.form-floating > .form-select ~ label {
-  color: #0d6efd;
-  opacity: 0.9;
-  transform: scale(0.85) translateY(-1.35rem) translateX(0.25rem);
+  padding: 1.2rem 1.2rem;
+  color: #5a6a7a;
   font-weight: 500;
 }
 
-/* Date input específico */
-input[type="date"].form-control {
-  padding-top: 1.75rem !important;
+.form-floating > .form-control:focus,
+.form-floating > .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.3rem rgba(13,110,253,.18);
 }
 
-/* Selects más consistentes */
-.form-floating > .form-select ~ label {
-  transform: scale(0.85) translateY(-1.4rem) translateX(0.3rem);
+/* Botones más grandes y prominentes */
+.btn-lg {
+  padding: 0.8rem 2.2rem;
+  font-size: 1.15rem;
+  border-radius: 0.8rem;
 }
 
-/* Botones con gradiente y hover genial */
-.btn-primary {
-  background: linear-gradient(90deg, #0d6efd, #0a58ca);
-  border: none;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(90deg, #0b5ed7, #084298);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.35);
-}
-
-.btn-outline-primary {
-  transition: all 0.3s ease;
-}
-
-.btn-outline-primary:hover {
-  background-color: #0d6efd;
-  color: white;
-  transform: translateY(-2px);
-}
-
-/* Pasos con mejor hover */
-.nav-pills .nav-link {
-  transition: all 0.3s ease;
-}
-
-.nav-pills .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  transform: scale(1.05);
-}
-
-.nav-pills .nav-link.active {
-  background-color: rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
-}
-
-/* Responsivo final */
-@media (max-width: 768px) {
-  .card-body {
-    padding: 1.5rem !important;
+/* Responsive – en mobile todo full-width */
+@media (max-width: 992px) {
+  .px-4, .px-md-6 {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
   }
-  .nav-pills .nav-link {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.9rem;
+
+  .steps-bar .nav-link {
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
   }
+}
+
+@media (max-width: 576px) {
+  h3 { font-size: 1.8rem !important; }
+  .btn-lg { width: 100%; margin-bottom: 1rem; }
 }

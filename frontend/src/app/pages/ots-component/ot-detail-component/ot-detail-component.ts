@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
@@ -17,31 +17,42 @@ export class OtDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private otService = inject(OtService);
-
+@Input() otId?: number;
   ot: OtDetailResponse | null = null;
   loading = true;
   errorMessage = '';
 
-  ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id || isNaN(id)) {
-      this.loading = false;
+ ngOnInit(): void {
+  let id: number;
+
+  // Prioridad: input > ruta
+  if (this.otId !== undefined) {
+    id = this.otId;
+  } else {
+    const idFromRoute = Number(this.route.snapshot.paramMap.get('id'));
+    if (!idFromRoute || isNaN(idFromRoute)) {
       this.mostrarError('ID de OT inválido');
       return;
     }
-
-    this.otService.getOtById(id).subscribe({
-      next: (detalle) => {
-        this.ot = detalle;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorMessage = err.message || 'No se pudo cargar el detalle de la OT';
-        this.mostrarError(this.errorMessage);
-      }
-    });
+    id = idFromRoute;
   }
+
+  this.loadOt(id);
+}
+private loadOt(id: number): void {
+  this.loading = true;
+  this.otService.getOtById(id).subscribe({
+    next: (detalle) => {
+      this.ot = detalle;
+      this.loading = false;
+    },
+    error: (err) => {
+      this.errorMessage = err?.message || 'No se pudo cargar el detalle';
+      this.mostrarError(this.errorMessage);
+      this.loading = false;
+    }
+  });
+}
 // En la clase OtDetailComponent
 
 estados: string[] = [
