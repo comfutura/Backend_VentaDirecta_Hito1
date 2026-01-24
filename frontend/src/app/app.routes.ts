@@ -7,30 +7,62 @@ import { OtsComponent } from './pages/ots-component/ots-component';
 import { LayoutComponent } from './component/layaout-component/layaout-component';
 import { SiteComponent } from './pages/site-component/site-component';
 import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compra-component';
+import { GestionCargosSolicitantesComponent } from './pages/gestion-cargos-solicitantes-component/gestion-cargos-solicitantes-component';
 
 import { authGuard } from './auth/auth.guard';
-import { GestionCargosSolicitantesComponent } from './pages/gestion-cargos-solicitantes-component/gestion-cargos-solicitantes-component';
 
 export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
+    // Opcional: puedes agregar un título o data si lo necesitas
+    // data: { title: 'Iniciar Sesión' }
   },
+
+  // Ruta protegida principal (con layout)
   {
     path: '',
     component: LayoutComponent,
     canActivateChild: [authGuard],
     children: [
-      { path: 'dashboard', component: DashboardComponent },
-
-      { path: 'ot', component: OtsComponent },
-      { path: 'site', component: SiteComponent },
-      { path: 'gestion-jefatura-analista', component: GestionCargosSolicitantesComponent },
-      { path: 'orden-compra', component: OrdenCompraComponent },
-    ],
+      // Redirección por defecto cuando entramos a la raíz protegida
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        component: DashboardComponent,
+        // data: { title: 'Dashboard', breadcrumb: 'Inicio' }
+      },
+      {
+        path: 'ot',
+        component: OtsComponent,
+        // data: { title: 'Órdenes de Trabajo' }
+      },
+      {
+        path: 'site',
+        component: SiteComponent,
+        // data: { title: 'Sitios' }
+      },
+      {
+        path: 'gestion-jefatura-analista',
+        component: GestionCargosSolicitantesComponent,
+        // data: { title: 'Gestión Jefatura / Analista' }
+      },
+      {
+        path: 'orden-compra',
+        component: OrdenCompraComponent,
+        // data: { title: 'Órdenes de Compra' }
+      },
+    ]
   },
+
+  // Cualquier otra ruta no reconocida → login
   {
     path: '**',
     redirectTo: 'login',
-  },
+    pathMatch: 'full'
+  }
 ];
