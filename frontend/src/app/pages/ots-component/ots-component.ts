@@ -1,8 +1,7 @@
-// ots.component.ts
 import { Component, OnInit, TemplateRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalRef, NgbDropdownModule, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef, NgbDropdownModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { FormOtsComponent } from './form-ots-component/form-ots-component';
 import { OtDetailComponent } from './ot-detail-component/ot-detail-component';
@@ -12,7 +11,6 @@ import { OtService } from '../../service/ot.service';
 import { OtListDto, Page } from '../../model/ots';
 import { Observable } from 'rxjs';
 
-
 @Component({
   selector: 'app-ots',
   standalone: true,
@@ -20,7 +18,7 @@ import { Observable } from 'rxjs';
     CommonModule,
     FormsModule,
     NgbDropdownModule,
-    NgbDatepickerModule,
+    NgbPaginationModule,
     FileSizePipe
   ],
   templateUrl: './ots-component.html',
@@ -39,7 +37,7 @@ export class OtsComponent implements OnInit {
   page: Page<OtListDto> | null = null;
   loading = false;
   errorMessage: string | null = null;
-
+  Math=Math;
   // Paginación
   pageSize = 10;
   currentPage = 0;
@@ -66,7 +64,7 @@ export class OtsComponent implements OnInit {
   importing = false;
   importResult: any = null;
 
-  // Exportación avanzada
+  // Exportación
   exportFiltroActivo = false;
   exportFiltroText = '';
   exportFechaDesde: Date | null = null;
@@ -78,169 +76,7 @@ export class OtsComponent implements OnInit {
   ngOnInit(): void {
     this.loadOts();
   }
-// En el OtsComponent, agrega estos métodos:
 
-// ==================== EXPORTACIÓN SIMPLE ====================
-
-/**
- * Exporta las OTs seleccionadas (para el dropdown)
- */
-exportSelectedOts(): void {
-  if (this.selectedCount === 0) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Sin selección',
-      text: 'Por favor selecciona al menos una OT para exportar',
-      confirmButtonColor: '#0d6efd'
-    });
-    return;
-  }
-
-  const otIds = Array.from(this.selectedOts);
-
-  Swal.fire({
-    title: 'Exportar seleccionadas',
-    html: `¿Exportar <strong>${this.selectedCount} OTs</strong> a Excel?`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#198754',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Exportar',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      this.excelService.exportOts(otIds).subscribe({
-        next: (blob: Blob) => {
-          const filename = `ots_seleccionadas_${new Date().getTime()}.xlsx`;
-          this.excelService.downloadExcel(blob, filename);
-
-          Swal.fire({
-            icon: 'success',
-            title: '¡Exportado!',
-            text: 'Archivo Excel generado correctamente',
-            timer: 2000,
-            showConfirmButton: false
-          });
-        },
-        error: (err) => {
-          Swal.fire('Error', 'No se pudo generar el archivo Excel', 'error');
-        }
-      });
-    }
-  });
-}
-
-/**
- * Exporta todas las OTs (para el dropdown)
- */
-exportAllOts(): void {
-  Swal.fire({
-    title: 'Exportar todas las OTs',
-    text: `¿Exportar las ${this.totalElements} órdenes de trabajo a Excel?`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#0d6efd',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Exportar todo',
-    cancelButtonText: 'Cancelar'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      this.excelService.exportAllOts().subscribe({
-        next: (blob: Blob) => {
-          const filename = `todas_ots_${new Date().getTime()}.xlsx`;
-          this.excelService.downloadExcel(blob, filename);
-
-          Swal.fire({
-            icon: 'success',
-            title: '¡Exportado!',
-            text: 'Todas las OTs exportadas correctamente',
-            timer: 2000,
-            showConfirmButton: false
-          });
-        },
-        error: (err) => {
-          Swal.fire('Error', 'No se pudo generar el archivo Excel', 'error');
-        }
-      });
-    }
-  });
-}
-
-/**
- * Exporta con filtros avanzados
- */
-exportFilteredOts(): void {
-  if (!this.exportFiltroText && !this.exportFechaDesde && !this.exportFechaHasta) {
-    this.exportAllOts();
-    return;
-  }
-
-  this.excelService.exportFilteredOts(
-    this.exportFiltroText || undefined,
-    this.exportFechaDesde || undefined,
-    this.exportFechaHasta || undefined
-  ).subscribe({
-    next: (blob: Blob) => {
-      const filename = `ots_filtradas_${new Date().getTime()}.xlsx`;
-      this.excelService.downloadExcel(blob, filename);
-
-      Swal.fire({
-        icon: 'success',
-        title: '¡Exportado!',
-        text: 'OTs filtradas exportadas correctamente',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    },
-    error: (err) => {
-      Swal.fire('Error', 'No se pudo exportar con los filtros especificados', 'error');
-    }
-  });
-}
-
-// ==================== IMPORTACIÓN ====================
-
-/**
- * Descarga la plantilla de importación
- */
-downloadImportTemplate(): void {
-  this.excelService.downloadTemplate().subscribe({
-    next: (blob: Blob) => {
-      this.excelService.downloadExcel(blob, 'plantilla_importacion_ots.xlsx');
-    },
-    error: (err) => {
-      Swal.fire('Error', 'No se pudo descargar la plantilla', 'error');
-    }
-  });
-}
-
-/**
- * Descarga el modelo de datos
- */
-downloadDataModel(): void {
-  this.excelService.downloadModel().subscribe({
-    next: (blob: Blob) => {
-      this.excelService.downloadExcel(blob, 'modelo_datos_ots.xlsx');
-    },
-    error: (err) => {
-      Swal.fire('Error', 'No se pudo descargar el modelo', 'error');
-    }
-  });
-}
-
-/**
- * Descarga el modelo de relaciones
- */
-downloadRelationsModel(): void {
-  this.excelService.downloadRelationsModel().subscribe({
-    next: (blob: Blob) => {
-      this.excelService.downloadExcel(blob, 'modelo_relaciones_ots.xlsx');
-    },
-    error: (err) => {
-      Swal.fire('Error', 'No se pudo descargar el modelo de relaciones', 'error');
-    }
-  });
-}
   // ==================== CARGA DE DATOS ====================
   loadOts(page: number = this.currentPage): void {
     this.loading = true;
@@ -265,7 +101,12 @@ downloadRelationsModel(): void {
       error: (err) => {
         this.errorMessage = err?.message || 'Error al cargar las OTs';
         this.loading = false;
-        Swal.fire('Errorerror');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudieron cargar las OTs',
+          confirmButtonColor: '#dc3545'
+        });
       }
     });
   }
@@ -273,6 +114,8 @@ downloadRelationsModel(): void {
   // ==================== FILTROS Y BÚSQUEDA ====================
   onSearch(): void {
     this.currentPage = 0;
+    this.selectedOts.clear();
+    this.updateSelectionCount();
     this.loadOts();
   }
 
@@ -282,6 +125,8 @@ downloadRelationsModel(): void {
     this.dateRange.desde = '';
     this.dateRange.hasta = '';
     this.currentPage = 0;
+    this.selectedOts.clear();
+    this.updateSelectionCount();
     this.loadOts();
   }
 
@@ -289,20 +134,17 @@ downloadRelationsModel(): void {
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
     this.currentPage = page;
+    this.selectedOts.clear();
+    this.updateSelectionCount();
     this.loadOts(page);
   }
 
   changePageSize(size: number): void {
     this.pageSize = size;
     this.currentPage = 0;
+    this.selectedOts.clear();
+    this.updateSelectionCount();
     this.loadOts();
-  }
-
-  get visiblePages(): number[] {
-    const range = 2;
-    const start = Math.max(0, this.currentPage - range);
-    const end = Math.min(this.totalPages - 1, this.currentPage + range);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
   // ==================== SELECCIÓN MÚLTIPLE ====================
@@ -336,7 +178,108 @@ downloadRelationsModel(): void {
     this.updateSelectionCount();
   }
 
-  // ==================== EXPORTACIÓN MEJORADA ====================
+  // ==================== EXPORTACIÓN ====================
+  exportSelectedOts(): void {
+    if (this.selectedCount === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin selección',
+        text: 'Por favor selecciona al menos una OT para exportar',
+        confirmButtonColor: '#0d6efd'
+      });
+      return;
+    }
+
+    const otIds = Array.from(this.selectedOts);
+
+    Swal.fire({
+      title: 'Exportar seleccionadas',
+      html: `¿Exportar <strong>${this.selectedCount} OTs</strong> a Excel?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#198754',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Exportar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.exportToExcel(() => this.excelService.exportOts(otIds), 'seleccionadas');
+      }
+    });
+  }
+
+  exportAllOts(): void {
+    Swal.fire({
+      title: 'Exportar todas las OTs',
+      text: `¿Exportar las ${this.totalElements} órdenes de trabajo a Excel?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0d6efd',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Exportar todo',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.exportToExcel(() => this.excelService.exportAllOts(), 'todas');
+      }
+    });
+  }
+
+  exportFilteredOts(): void {
+    if (!this.exportFiltroText && !this.exportFechaDesde && !this.exportFechaHasta) {
+      this.exportAllOts();
+      return;
+    }
+
+    this.exportToExcel(
+      () => this.excelService.exportFilteredOts(
+        this.exportFiltroText || undefined,
+        this.exportFechaDesde || undefined,
+        this.exportFechaHasta || undefined
+      ),
+      'filtradas'
+    );
+  }
+
+  private exportToExcel(exportFn: () => Observable<Blob>, type: string): void {
+    Swal.fire({
+      title: 'Generando Excel...',
+      text: 'Por favor espera',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    exportFn().subscribe({
+      next: (blob) => {
+        Swal.close();
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
+        const filename = `ots_${type}_${timestamp}.xlsx`;
+        this.excelService.downloadExcel(blob, filename);
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Exportación exitosa!',
+          text: 'El archivo Excel se ha descargado',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      },
+      error: (err) => {
+        Swal.close();
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo exportar el archivo',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  // ==================== MODALES DE EXPORTACIÓN ====================
   openExportModal(): void {
     this.exportFiltroText = this.searchText;
     this.exportFiltroActivo = this.selectedOts.size > 0;
@@ -345,84 +288,22 @@ downloadRelationsModel(): void {
       size: 'lg',
       backdrop: 'static',
       centered: true,
-      windowClass: 'export-modal'
+      scrollable: true,
+      windowClass: 'export-modal modal-scrollable'
     });
 
     this.modalRefs.push(modalRef);
   }
 
-export(): void {
-  let exportObservable: Observable<Blob>;
-  let exportType = '';
-
-  if (this.exportFiltroActivo && this.selectedCount > 0) {
-    // Exportar seleccionadas
-    const otIds = Array.from(this.selectedOts);
-    exportObservable = this.excelService.exportOts(otIds);
-    exportType = 'seleccionadas';
-  } else if (this.exportFiltroText || this.exportFechaDesde || this.exportFechaHasta) {
-    // Exportar con filtros
-    exportObservable = this.excelService.exportFilteredOts(
-      this.exportFiltroText || undefined,
-      this.exportFechaDesde || undefined,
-      this.exportFechaHasta || undefined
-    );
-    exportType = 'filtradas';
-  } else {
-    // Exportar todas
-    exportObservable = this.excelService.exportAllOts();
-    exportType = 'todas';
-  }
-
-  // Mostrar loading usando el método correcto
-  Swal.fire({
-    title: 'Generando Excel...',
-    text: 'Por favor espera',
-    allowOutsideClick: false,
-    showConfirmButton: false,
-    willOpen: () => {
-      Swal.showLoading();
-    }
-  });
-
-  exportObservable.subscribe({
-    next: (blob) => {
-      // Cerrar el loading
-      Swal.close();
-
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
-      const filename = `ots_${exportType}_${timestamp}.xlsx`;
-      this.excelService.downloadExcel(blob, filename);
-
-      Swal.fire({
-        icon: 'success',
-        title: '¡Exportación exitosa!',
-        text: 'El archivo Excel se ha descargado',
-        timer: 2000,
-        showConfirmButton: false
-      });
-
-      this.closeAllModals();
-    },
-    error: (err) => {
-      Swal.close();
-      Swal.fire('Error', 'No se pudo exportar el archivo', 'error');
-    }
-  });
-}
-
-  getExportFilename(): string {
-    let base = 'ots_export_';
-
-    if (this.exportFiltroActivo) {
-      base += `seleccionadas_${this.selectedCount}_`;
-    } else if (this.exportFiltroText) {
-      base += `filtradas_`;
+  export(): void {
+    if (this.exportFiltroActivo && this.selectedCount > 0) {
+      this.exportSelectedOts();
+    } else if (this.exportFiltroText || this.exportFechaDesde || this.exportFechaHasta) {
+      this.exportFilteredOts();
     } else {
-      base += 'todas_';
+      this.exportAllOts();
     }
-
-    return base + new Date().getTime() + '.xlsx';
+    this.closeAllModals();
   }
 
   // ==================== IMPORTACIÓN ====================
@@ -435,7 +316,8 @@ export(): void {
       size: 'lg',
       backdrop: 'static',
       centered: true,
-      windowClass: 'import-modal'
+      scrollable: true,
+      windowClass: 'import-modal modal-scrollable'
     });
 
     this.modalRefs.push(modalRef);
@@ -458,9 +340,25 @@ export(): void {
 
   private processFile(file: File): void {
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
-      Swal.fire('Error', 'Solo se permiten archivos Excel (.xlsx)', 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Solo se permiten archivos Excel (.xlsx)',
+        confirmButtonColor: '#dc3545'
+      });
       return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El archivo no debe superar los 10MB',
+        confirmButtonColor: '#dc3545'
+      });
+      return;
+    }
+
     this.importFile = file;
   }
 
@@ -483,8 +381,62 @@ export(): void {
         }
       },
       error: (err) => {
-        Swal.fire('Error', err.error?.mensaje || 'Error en la importación', 'error');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.error?.mensaje || 'Error en la importación',
+          confirmButtonColor: '#dc3545'
+        });
         this.importing = false;
+      }
+    });
+  }
+
+  // ==================== DESCARGAS ====================
+  downloadImportTemplate(): void {
+    this.excelService.downloadTemplate().subscribe({
+      next: (blob) => {
+        this.excelService.downloadExcel(blob, 'plantilla_importacion_ots.xlsx');
+      },
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo descargar la plantilla',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  downloadDataModel(): void {
+    this.excelService.downloadModel().subscribe({
+      next: (blob) => {
+        this.excelService.downloadExcel(blob, 'modelo_datos_ots.xlsx');
+      },
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo descargar el modelo',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  downloadRelationsModel(): void {
+    this.excelService.downloadRelationsModel().subscribe({
+      next: (blob) => {
+        this.excelService.downloadExcel(blob, 'modelo_relaciones_ots.xlsx');
+      },
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo descargar el modelo de relaciones',
+          confirmButtonColor: '#dc3545'
+        });
       }
     });
   }
@@ -495,16 +447,26 @@ export(): void {
       size: 'xl',
       backdrop: 'static',
       centered: true,
-      windowClass: 'form-ots-modal'
+      scrollable: true,
+      windowClass: 'form-ots-modal modal-scrollable'
     });
 
     modalRef.componentInstance.mode = 'create';
+    modalRef.componentInstance.onClose = () => {
+      modalRef.dismiss();
+    };
 
     modalRef.result.then(
       (result) => {
         if (result === 'saved') {
           this.loadOts();
-          Swal.fire('Éxito', 'OT creada correctamente', 'success');
+          Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'OT creada correctamente',
+            timer: 2000,
+            showConfirmButton: false
+          });
         }
       },
       () => {}
@@ -520,18 +482,28 @@ export(): void {
           size: 'xl',
           backdrop: 'static',
           centered: true,
-          windowClass: 'form-ots-modal'
+          scrollable: true,
+          windowClass: 'form-ots-modal modal-scrollable'
         });
 
         modalRef.componentInstance.mode = 'edit';
         modalRef.componentInstance.otId = ot.idOts;
         modalRef.componentInstance.otData = otData;
+        modalRef.componentInstance.onClose = () => {
+          modalRef.dismiss();
+        };
 
         modalRef.result.then(
           (result) => {
             if (result === 'saved') {
               this.loadOts();
-              Swal.fire('Éxito', 'OT actualizada correctamente', 'success');
+              Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'OT actualizada correctamente',
+                timer: 2000,
+                showConfirmButton: false
+              });
             }
           },
           () => {}
@@ -539,7 +511,14 @@ export(): void {
 
         this.modalRefs.push(modalRef);
       },
-      error: (err) => Swal.fire('Error', 'No se pudo cargar la OT para editar', 'error')
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo cargar la OT para editar',
+          confirmButtonColor: '#dc3545'
+        });
+      }
     });
   }
 
@@ -550,19 +529,34 @@ export(): void {
           size: 'xl',
           backdrop: 'static',
           centered: true,
-          windowClass: 'ot-detail-modal'
+          scrollable: true,
+          windowClass: 'ot-detail-modal modal-scrollable'
         });
 
         modalRef.componentInstance.otDetail = otDetail;
+        modalRef.componentInstance.onClose = () => {
+          modalRef.dismiss();
+        };
+        
         this.modalRefs.push(modalRef);
       },
-      error: (err) => Swal.fire('Error', 'No se pudo cargar el detalle de la OT', 'error')
+      error: (err) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo cargar el detalle de la OT',
+          confirmButtonColor: '#dc3545'
+        });
+      }
     });
   }
 
   // ==================== UTILITARIOS ====================
   getEstadoClass(estado: string | undefined | null): string {
-    switch (estado?.toUpperCase()) {
+    if (!estado) return 'badge-secondary';
+    
+    const estadoUpper = estado.toUpperCase();
+    switch (estadoUpper) {
       case 'FINALIZADA': return 'badge-success';
       case 'EN PROCESO': return 'badge-warning';
       case 'ASIGNACION': return 'badge-info';
@@ -577,89 +571,69 @@ export(): void {
       text: `La OT #${ot.ot} pasará a estado ${ot.activo ? 'inactiva' : 'activa'}`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'No'
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, cambiar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         this.otService.toggleActivo(ot.idOts!).subscribe({
           next: () => {
             this.loadOts();
-            Swal.fire('Éxito', `OT ${ot.activo ? 'desactivada' : 'activada'}`, 'success');
+            Swal.fire({
+              icon: 'success',
+              title: 'Éxito',
+              text: `OT ${ot.activo ? 'desactivada' : 'activada'} correctamente`,
+              timer: 2000,
+              showConfirmButton: false
+            });
           },
-          error: (err) => Swal.fire('Error', 'No se pudo cambiar el estado', 'error')
+          error: (err) => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo cambiar el estado',
+              confirmButtonColor: '#dc3545'
+            });
+          }
         });
       }
     });
   }
 
-  // Método simplificado sin xlsx
-downloadTemplate(): void {
-  this.excelService.downloadTemplate().subscribe({
-    next: (blob) => {
-      this.excelService.downloadExcel(blob, 'plantilla_importacion_ots.xlsx');
-
-      Swal.fire({
-        icon: 'info',
-        title: 'Plantilla descargada',
-        html: `<div class="text-start">
-                <strong>Instrucciones importantes:</strong><br><br>
-                1. <strong>NO modificar los nombres de las columnas</strong> (fila 1)<br>
-                2. Usa los encabezados exactos en minúsculas<br>
-                3. Fechaapertura: Formato dd/mm/aaaa<br>
-                4. Guardar como archivo .xlsx<br><br>
-                <small class="text-muted">Los encabezados deben ser exactos</small>
-              </div>`,
-        confirmButtonText: 'Entendido'
-      });
-    },
-    error: (err) => {
-      Swal.fire('Error', 'No se pudo descargar la plantilla', 'error');
-    }
-  });
-}
-
-// Mostrar ayuda específica
-showImportHelp(): void {
-  Swal.fire({
-    title: 'Encabezados requeridos',
-    html: `<div class="text-start">
-            <p>Los encabezados deben ser exactamente estos (fila 1):</p>
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Columna</th>
-                  <th>Descripción</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td><code>descripcion</code></td><td>Descripción de la OT</td></tr>
-                <tr><td><code>fechaapertura</code></td><td>Fecha (dd/mm/aaaa)</td></tr>
-                <tr><td><code>cliente</code></td><td>Nombre del cliente</td></tr>
-                <tr><td><code>area</code></td><td>Área del cliente</td></tr>
-                <tr><td><code>proyecto</code></td><td>Nombre del proyecto</td></tr>
-                <tr><td><code>fase</code></td><td>Fase del proyecto</td></tr>
-                <tr><td><code>site</code></td><td>Código del sitio</td></tr>
-                <tr><td><code>region</code></td><td>Región</td></tr>
-                <tr><td><code>diasasignados</code></td><td>Número de días</td></tr>
-                <tr><td><code>estado</code></td><td>Estado de la OT</td></tr>
-              </tbody>
-            </table>
-            <p class="text-muted small">Importante: Todo en minúsculas, sin espacios, sin acentos</p>
-          </div>`,
-    width: 600,
-    confirmButtonText: 'Descargar plantilla'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      this.downloadTemplate();
-    }
-  });
-}
+  showImportHelp(): void {
+    Swal.fire({
+      title: 'Ayuda de importación',
+      html: `<div class="text-start">
+              <h6>Encabezados requeridos:</h6>
+              <ul class="list-group">
+                <li class="list-group-item"><code>descripcion</code> - Descripción de la OT</li>
+                <li class="list-group-item"><code>fechaapertura</code> - Fecha (dd/mm/aaaa)</li>
+                <li class="list-group-item"><code>cliente</code> - Nombre del cliente</li>
+                <li class="list-group-item"><code>area</code> - Área del cliente</li>
+                <li class="list-group-item"><code>proyecto</code> - Nombre del proyecto</li>
+                <li class="list-group-item"><code>fase</code> - Fase del proyecto</li>
+                <li class="list-group-item"><code>site</code> - Código del sitio</li>
+                <li class="list-group-item"><code>region</code> - Región</li>
+                <li class="list-group-item"><code>diasasignados</code> - Número de días</li>
+                <li class="list-group-item"><code>estado</code> - Estado de la OT</li>
+              </ul>
+              <p class="mt-3 text-muted small">Importante: Los encabezados deben ser exactos, en minúsculas y sin espacios</p>
+            </div>`,
+      width: 600,
+      confirmButtonText: 'Entendido'
+    });
+  }
 
   closeAllModals(): void {
     this.modalRefs.forEach(modal => modal.dismiss());
     this.modalRefs = [];
   }
 
-  // Helper para Math en template
-  Math = Math;
+  // Helper para truncar texto largo
+  truncateText(text: string | undefined | null, maxLength: number = 50): string {
+    if (!text) return '—';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
 }
