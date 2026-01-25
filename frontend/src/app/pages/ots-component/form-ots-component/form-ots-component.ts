@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,13 +11,14 @@ import { OtService } from '../../../service/ot.service';
 import { OtCreateRequest, OtDetailResponse } from '../../../model/ots';
 
 @Component({
-  selector: 'app-ot-form',
+  selector: 'app-form-ots',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './form-ots-component.html',
-  styleUrl: './form-ots-component.css'
+  styleUrls: ['./form-ots-component.css']
 })
 export class FormOtsComponent implements OnInit {
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
   private fb = inject(FormBuilder);
   private otService = inject(OtService);
@@ -28,8 +29,10 @@ export class FormOtsComponent implements OnInit {
 
   @Input() otId: number | null = null;
   @Input() isViewMode: boolean = false;
+  @Input() mode: 'create' | 'edit' = 'create';
+  @Input() otData: any = null;
+  @Input() onClose: () => void = () => {};
 
-  // Eventos que el padre (OtsComponent) va a escuchar
   @Output() saved = new EventEmitter<void>();
   @Output() canceled = new EventEmitter<void>();
 
@@ -63,39 +66,30 @@ export class FormOtsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.isEditMode = this.mode === 'edit';
+    
     const user = this.authService.currentUser;
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-    this.determinarModoOperacion();
     this.suscribirCambiosFormulario();
 
     if (this.isEditMode && this.otId) {
       this.cargarDatosParaEdicion(this.otId);
-    } else if (!this.isEditMode) {
+    } else if (this.mode === 'edit' && this.otData) {
+      this.loading = false;
+      this.form.patchValue(this.otData);
+      const clienteId = this.form.get('idCliente')?.value;
+      if (clienteId) {
+        this.cargarAreasPorCliente(clienteId);
+      }
+    } else {
       this.cargarDropdownsParaCreacion();
     }
 
     if (this.isViewMode) {
       this.form.disable({ emitEvent: false });
     }
-  }
-
-  private determinarModoOperacion(): void {
-    if (this.otId !== null) {
-      this.isEditMode = true;
-      return;
-    }
-
-    const idFromRoute = this.route.snapshot.paramMap.get('id');
-    if (idFromRoute && !isNaN(+idFromRoute)) {
-      this.otId = +idFromRoute;
-      this.isEditMode = true;
-      return;
-    }
-
-    this.isEditMode = false;
-    this.otId = null;
   }
 
   private crearFormularioBase(): void {
@@ -132,27 +126,71 @@ export class FormOtsComponent implements OnInit {
   get clienteNombre(): string {
     return this.clientes.find(c => c.id === this.form.value.idCliente)?.label || '—';
   }
+  
   get areaNombre(): string {
     return this.areas.find(a => a.id === this.form.value.idArea)?.label || '—';
   }
+  
   get proyectoNombre(): string {
     return this.proyectos.find(p => p.id === this.form.value.idProyecto)?.label || '—';
   }
+  
   get faseNombre(): string {
     return this.fases.find(f => f.id === this.form.value.idFase)?.label || '—';
   }
+  
   get siteNombre(): string {
     return this.sites.find(s => s.id === this.form.value.idSite)?.label || '—';
   }
+  
   get regionNombre(): string {
     return this.regiones.find(r => r.id === this.form.value.idRegion)?.label || '—';
   }
+  
   get fechaAperturaFormatted(): string {
     const fecha = this.form.value.fechaApertura;
     return fecha ? new Date(fecha).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
   }
 
-  // Tipado seguro para f (evita errores TS4111 si lo usas en template)
+  getResponsableNombre(tipo: string): string {
+    let dropdown: DropdownItem[] = [];
+    let value: number | null = null;
+
+    switch (tipo) {
+      case 'jefaturaCliente':
+        dropdown = this.jefaturasCliente;
+        value = this.form.value.idJefaturaClienteSolicitante;
+        break;
+      case 'analistaCliente':
+        dropdown = this.analistasCliente;
+        value = this.form.value.idAnalistaClienteSolicitante;
+        break;
+      case 'coordinadorTiCw':
+        dropdown = this.coordinadoresTiCw;
+        value = this.form.value.idCoordinadorTiCw;
+        break;
+      case 'jefaturaResponsable':
+        dropdown = this.jefaturasResponsable;
+        value = this.form.value.idJefaturaResponsable;
+        break;
+      case 'liquidador':
+        dropdown = this.liquidadores;
+        value = this.form.value.idLiquidador;
+        break;
+      case 'ejecutante':
+        dropdown = this.ejecutantes;
+        value = this.form.value.idEjecutante;
+        break;
+      case 'analistaContable':
+        dropdown = this.analistasContable;
+        value = this.form.value.idAnalistaContable;
+        break;
+    }
+
+    return dropdown.find(item => item.id === value)?.label || '';
+  }
+
+  // Tipado seguro para f
   get f() {
     return this.form.controls as { [K in keyof typeof this.form.value]: AbstractControl };
   }
@@ -206,7 +244,7 @@ export class FormOtsComponent implements OnInit {
       },
       error: () => {
         Swal.fire('Error', 'No se pudo cargar la información de la OT', 'error');
-        this.router.navigate(['/ot']);
+        this.onCancel();
       }
     });
   }
@@ -284,23 +322,34 @@ export class FormOtsComponent implements OnInit {
     this.form.markAllAsTouched();
 
     if (this.form.invalid) {
+      // Desplazar al primer campo inválido
+      const invalidElements = document.querySelectorAll('.is-invalid');
+      if (invalidElements.length > 0) {
+        invalidElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      
       Swal.fire({
         icon: 'warning',
         title: 'Formulario incompleto',
-        text: 'Por favor completa los campos obligatorios.',
+        text: 'Por favor completa los campos obligatorios marcados en rojo.',
         confirmButtonColor: '#ffc107'
       });
       return;
     }
 
     const title = this.isEditMode ? '¿Guardar cambios?' : '¿Crear nueva OT?';
+    const text = this.isEditMode 
+      ? 'Se actualizará la información de esta OT.' 
+      : 'Se creará una nueva Orden de Trabajo con los datos proporcionados.';
+
     Swal.fire({
       title,
+      text,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
+      confirmButtonColor: '#198754',
       cancelButtonColor: '#6c757d',
-      confirmButtonText: this.isEditMode ? 'Sí, guardar' : 'Sí, crear',
+      confirmButtonText: this.isEditMode ? 'Guardar' : 'Crear',
       cancelButtonText: 'Cancelar'
     }).then(result => {
       if (!result.isConfirmed) return;
@@ -340,16 +389,12 @@ export class FormOtsComponent implements OnInit {
             showConfirmButton: false
           });
 
-          // Cierra el modal automáticamente
+          // Emitir evento guardado y cerrar modal
           this.saved.emit();
-
-          // Redirección después del Swal
+          
+          // Cerrar automáticamente después de mostrar el mensaje
           setTimeout(() => {
-            if (this.isEditMode) {
-              this.router.navigate(['/ot', res.idOts]);
-            } else {
-              this.router.navigate(['/ot']);
-            }
+            this.onClose();
           }, 2500);
         },
         error: (err) => {
@@ -357,6 +402,7 @@ export class FormOtsComponent implements OnInit {
             icon: 'error',
             title: 'Error al guardar',
             text: err?.error?.message || 'Ocurrió un problema inesperado',
+            confirmButtonColor: '#dc3545'
           });
           this.loading = false;
         }
@@ -364,34 +410,104 @@ export class FormOtsComponent implements OnInit {
     });
   }
 
-  // Método para cancelar (puedes llamarlo desde un botón "Cancelar")
   onCancel(): void {
-    this.canceled.emit();
+    if (this.form.dirty && !this.submitted) {
+      Swal.fire({
+        title: '¿Descartar cambios?',
+        text: 'Tiene cambios sin guardar. ¿Está seguro de que desea salir?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, descartar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (result.isConfirmed) {
+          this.canceled.emit();
+          this.onClose();
+        }
+      });
+    } else {
+      this.canceled.emit();
+      this.onClose();
+    }
   }
 
   resetForm(): void {
+    const title = this.isEditMode ? '¿Descartar cambios?' : '¿Limpiar formulario?';
+    const text = this.isEditMode 
+      ? 'Perderá todos los cambios realizados.' 
+      : 'Se eliminarán todos los datos ingresados.';
+
     Swal.fire({
-      title: this.isEditMode ? '¿Descartar cambios?' : '¿Limpiar formulario?',
+      title,
+      text,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
       cancelButtonText: 'Cancelar',
-      confirmButtonText: this.isEditMode ? 'Sí, descartar' : 'Sí, limpiar'
+      confirmButtonText: this.isEditMode ? 'Descartar' : 'Limpiar'
     }).then(result => {
       if (!result.isConfirmed) return;
 
       if (this.isEditMode) {
-        this.router.navigate(['/ot']);
+        // Recargar datos originales
+        if (this.otId) {
+          this.loading = true;
+          this.otService.getOtParaEdicion(this.otId).subscribe({
+            next: (ot) => {
+              this.form.reset();
+              this.form.patchValue(ot);
+              this.loading = false;
+            },
+            error: () => {
+              Swal.fire('Error', 'No se pudieron restaurar los datos', 'error');
+              this.loading = false;
+            }
+          });
+        }
       } else {
-        this.form.reset();
+        const hoy = new Date().toISOString().split('T')[0];
+        this.form.reset({
+          fechaApertura: hoy
+        });
         this.submitted = false;
         this.areas = [];
         this.form.get('idArea')?.disable({ emitEvent: false });
-        this.form.patchValue({
-          fechaApertura: new Date().toISOString().split('T')[0]
-        });
         this.actualizarDescripcion();
+        
+        // Scroll al inicio
+        if (this.scrollContainer) {
+          this.scrollContainer.nativeElement.scrollTop = 0;
+        }
       }
     });
+  }
+
+  // Método para cambiar de paso con validación
+  cambiarPaso(siguientePaso: number): void {
+    if (siguientePaso === 2 && this.currentStep === 1) {
+      // Validar paso 1 antes de continuar
+      this.submitted = true;
+      const controlesPaso1 = ['idCliente', 'idArea', 'idProyecto', 'idFase', 'idSite', 'idRegion', 'fechaApertura', 'descripcion'];
+      const invalidos = controlesPaso1.filter(control => this.f[control].invalid);
+      
+      if (invalidos.length > 0) {
+        const elemento = document.querySelector(`[formControlName="${invalidos[0]}"]`);
+        if (elemento) {
+          elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+    }
+    
+    this.currentStep = siguientePaso;
+    
+    // Scroll al inicio del paso
+    setTimeout(() => {
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.scrollTop = 0;
+      }
+    }, 100);
   }
 }

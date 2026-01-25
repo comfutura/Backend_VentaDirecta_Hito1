@@ -1,368 +1,582 @@
-<div class="container-fluid py-4 py-md-5 min-vh-100 d-flex flex-column bg-gradient-soft">
-  <div class="row justify-content-center flex-grow-1">
-    <div class="col-12 col-xl-11 col-xxl-10">
+<div class="form-ots-container bg-white min-vh-100">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-overlay d-flex align-items-center justify-content-center">
+    <div class="text-center">
+      <div class="spinner-grow text-primary" style="width: 3.5rem; height: 3.5rem;" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <h5 class="mt-4 text-primary fw-semibold">
+        {{ isEditMode ? 'Cargando datos de la OT...' : 'Cargando formulario...' }}
+      </h5>
+    </div>
+  </div>
 
-      <!-- Loading -->
-      <div *ngIf="loading" class="text-center py-5 my-5">
-        <div class="spinner-grow text-primary" style="width: 4rem; height: 4rem;" role="status">
-          <span class="visually-hidden">Cargando...</span>
+  <!-- Formulario principal -->
+  <ng-container *ngIf="!loading">
+    <div class="form-header bg-primary text-white p-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="header-icon bg-white text-primary rounded-circle p-3 shadow-sm">
+            <i class="bi bi-file-earmark-text fs-2"></i>
+          </div>
+          <div>
+            <h3 class="mb-1 fw-bold">
+              {{ isEditMode ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo' }}
+              <span *ngIf="isEditMode && form.value.idOts" class="badge bg-light text-primary ms-2 fs-6">
+                #{{ form.value.idOts }}
+              </span>
+            </h3>
+            <p class="mb-0 opacity-75">
+              {{ isEditMode ? 'Modifique los datos necesarios' : 'Complete todos los campos obligatorios' }}
+            </p>
+          </div>
         </div>
-        <h4 class="mt-4 text-primary fw-light">
-          {{ isEditMode ? 'Cargando datos de la OT...' : 'Preparando nueva Orden de Trabajo...' }}
-        </h4>
+        
+        <!-- Botón cerrar -->
+        <button type="button" class="btn-close btn-close-white opacity-75" 
+                (click)="onCancel()" aria-label="Cerrar">
+        </button>
       </div>
 
-      <!-- Formulario principal -->
-      <ng-container *ngIf="!loading">
-        <div class="card border-0 shadow-xl rounded-4 overflow-hidden bg-white bg-opacity-98 backdrop-blur-md">
+      <!-- Usuario logueado -->
+      <div class="user-info small bg-primary-dark rounded-pill px-3 py-1 d-inline-flex align-items-center gap-2">
+        <i class="bi bi-person-circle"></i>
+        <span>{{ usernameLogueado }}</span>
+        <span *ngIf="trabajadorIdLogueado" class="opacity-75">
+          (ID: {{ trabajadorIdLogueado }})
+        </span>
+      </div>
+    </div>
 
-          <!-- Header -->
-          <div class="card-header bg-gradient-header text-white py-4 py-md-5 px-4 px-md-5 position-relative">
-            <div class="position-absolute top-0 end-0 opacity-10 fs-1 pe-4 pt-3">📄</div>
+    <!-- Steps Navigation -->
+    <div class="steps-navigation bg-light px-4 py-3 border-bottom">
+      <div class="d-flex justify-content-center gap-2">
+        <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
+                [class.active]="currentStep === 1"
+                [class.completed]="currentStep > 1"
+                (click)="currentStep = 1">
+          <i class="bi bi-1-circle me-2"></i>
+          Información Principal
+        </button>
+        <div class="step-divider d-flex align-items-center px-2">
+          <i class="bi bi-chevron-right text-muted"></i>
+        </div>
+        <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
+                [class.active]="currentStep === 2"
+                [class.completed]="currentStep > 2"
+                (click)="currentStep = 2">
+          <i class="bi bi-2-circle me-2"></i>
+          Responsables
+        </button>
+        <div class="step-divider d-flex align-items-center px-2">
+          <i class="bi bi-chevron-right text-muted"></i>
+        </div>
+        <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
+                [class.active]="currentStep === 3"
+                (click)="currentStep = 3">
+          <i class="bi bi-3-circle me-2"></i>
+          Confirmar
+        </button>
+      </div>
+    </div>
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
-              <div class="d-flex align-items-center gap-3">
-                <div class="icon-circle bg-white text-primary shadow">
-                  <i class="bi bi-file-earmark-plus-fill fs-3"></i>
+    <!-- Contenido del formulario con scroll -->
+    <div class="form-content-scrollable" #scrollContainer>
+      <div class="p-4">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <!-- Paso 1: Información Principal -->
+          <div *ngIf="currentStep === 1" class="step-content animate__animated animate__fadeIn">
+            <h5 class="step-title mb-4 pb-2 border-bottom">
+              <i class="bi bi-card-checklist text-primary me-2"></i>
+              Información Principal de la OT
+              <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Obligatorio</span>
+            </h5>
+
+            <div class="row g-4">
+              <!-- Cliente -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Cliente <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-lg" formControlName="idCliente"
+                          [class.is-invalid]="submitted && f['idCliente'].invalid">
+                    <option [ngValue]="null">Seleccione un cliente...</option>
+                    <option *ngFor="let c of clientes" [ngValue]="c.id">
+                      {{ c.label }}
+                    </option>
+                  </select>
+                  <div *ngIf="submitted && f['idCliente'].invalid" class="invalid-feedback">
+                    Debe seleccionar un cliente
+                  </div>
                 </div>
-                <div>
-                  <h4 class="mb-0 fw-bold fs-3">
-                    {{ isEditMode ? 'Editar Orden de Trabajo' : 'Crear Nueva Orden de Trabajo' }}
-                  </h4>
-                  <small class="opacity-85">
-                    {{ isEditMode ? 'Modificando OT #' + (form.value.idOts || '—') : 'Complete los datos requeridos' }}
+              </div>
+
+              <!-- Área -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Área <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-lg" formControlName="idArea"
+                          [class.is-invalid]="submitted && f['idArea'].invalid"
+                          [disabled]="!f['idCliente'].value">
+                    <option [ngValue]="null">
+                      {{ f['idCliente'].value ? 'Seleccione área...' : 'Seleccione cliente primero' }}
+                    </option>
+                    <option *ngFor="let a of areas" [ngValue]="a.id">
+                      {{ a.label }}
+                    </option>
+                  </select>
+                  <div *ngIf="submitted && f['idArea'].invalid" class="invalid-feedback">
+                    Debe seleccionar un área
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fecha Apertura -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Fecha de Apertura <span class="text-danger">*</span>
+                  </label>
+                  <input type="date" class="form-control form-control-lg" formControlName="fechaApertura"
+                         [class.is-invalid]="submitted && f['fechaApertura'].invalid">
+                  <div *ngIf="submitted && f['fechaApertura'].invalid" class="invalid-feedback">
+                    Fecha requerida
+                  </div>
+                </div>
+              </div>
+
+              <!-- Proyecto -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Proyecto <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-lg" formControlName="idProyecto"
+                          [class.is-invalid]="submitted && f['idProyecto'].invalid">
+                    <option [ngValue]="null">Seleccione proyecto...</option>
+                    <option *ngFor="let p of proyectos" [ngValue]="p.id">
+                      {{ p.label }}
+                    </option>
+                  </select>
+                  <div *ngIf="submitted && f['idProyecto'].invalid" class="invalid-feedback">
+                    Debe seleccionar un proyecto
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fase -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Fase <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-lg" formControlName="idFase"
+                          [class.is-invalid]="submitted && f['idFase'].invalid">
+                    <option [ngValue]="null">Seleccione fase...</option>
+                    <option *ngFor="let f of fases" [ngValue]="f.id">
+                      {{ f.label }}
+                    </option>
+                  </select>
+                  <div *ngIf="submitted && f['idFase'].invalid" class="invalid-feedback">
+                    Debe seleccionar una fase
+                  </div>
+                </div>
+              </div>
+
+              <!-- Site -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Site <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-lg" formControlName="idSite"
+                          [class.is-invalid]="submitted && f['idSite'].invalid">
+                    <option [ngValue]="null">Seleccione site...</option>
+                    <option *ngFor="let s of sites" [ngValue]="s.id">
+                      {{ s.label }}
+                    </option>
+                  </select>
+                  <div *ngIf="submitted && f['idSite'].invalid" class="invalid-feedback">
+                    Debe seleccionar un site
+                  </div>
+                </div>
+              </div>
+
+              <!-- Región -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Región <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-lg" formControlName="idRegion"
+                          [class.is-invalid]="submitted && f['idRegion'].invalid">
+                    <option [ngValue]="null">Seleccione región...</option>
+                    <option *ngFor="let r of regiones" [ngValue]="r.id">
+                      {{ r.label }}
+                    </option>
+                  </select>
+                  <div *ngIf="submitted && f['idRegion'].invalid" class="invalid-feedback">
+                    Debe seleccionar una región
+                  </div>
+                </div>
+              </div>
+
+              <!-- OT Anterior -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    OT Anterior
+                    <span class="badge bg-secondary-subtle text-secondary ms-1 fs-7">Opcional</span>
+                  </label>
+                  <input type="number" class="form-control form-control-lg" formControlName="idOtsAnterior"
+                         min="1" placeholder="Número de OT anterior">
+                  <small class="form-text text-muted">
+                    Número de OT previa si aplica
                   </small>
                 </div>
               </div>
 
-              <div class="text-md-end small opacity-90">
-                Creado por: <strong class="text-white">{{ usernameLogueado }}</strong>
-                <span class="ms-2 opacity-75" *ngIf="trabajadorIdLogueado">(ID: {{ trabajadorIdLogueado }})</span>
+              <!-- Descripción -->
+              <div class="col-12">
+                <div class="form-group">
+                  <label class="form-label fw-medium">
+                    Descripción <span class="text-danger">*</span>
+                    <span *ngIf="!isEditMode" class="badge bg-info-subtle text-info ms-1 fs-7">Auto-generada</span>
+                  </label>
+                  <textarea class="form-control" formControlName="descripcion" rows="3"
+                            [readonly]="!isEditMode"
+                            [class.bg-light]="!isEditMode"
+                            placeholder="Descripción automática según selección..."></textarea>
+                  <div *ngIf="submitted && f['descripcion'].invalid" class="invalid-feedback d-block">
+                    La descripción es requerida
+                  </div>
+                  <small *ngIf="!isEditMode" class="form-text text-info">
+                    <i class="bi bi-info-circle me-1"></i>
+                    La descripción se genera automáticamente según las selecciones realizadas
+                  </small>
+                </div>
               </div>
             </div>
 
-            <!-- Barra de pasos mejorada -->
-            <div class="mt-4 mt-md-5">
-              <ul class="nav nav-pills nav-justified steps-bar rounded-pill bg-white bg-opacity-15 p-1 shadow-inner" role="tablist">
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link text-white fw-semibold rounded-pill px-3 px-md-5 py-2 transition-all"
-                          [class.active]="currentStep === 1" (click)="currentStep = 1" type="button">
-                    <i class="bi bi-1-circle-fill me-2"></i> Principal
-                  </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link text-white fw-semibold rounded-pill px-3 px-md-5 py-2 transition-all"
-                          [class.active]="currentStep === 2" (click)="currentStep = 2" type="button">
-                    <i class="bi bi-2-circle-fill me-2"></i> Responsables
-                  </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link text-white fw-semibold rounded-pill px-3 px-md-5 py-2 transition-all"
-                          [class.active]="currentStep === 3" (click)="currentStep = 3" type="button">
-                    <i class="bi bi-3-circle-fill me-2"></i> Confirmar
-                  </button>
-                </li>
-              </ul>
+            <!-- Botones paso 1 -->
+            <div class="step-actions mt-5 pt-4 border-top">
+              <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-danger btn-lg px-4"
+                        (click)="resetForm()" [disabled]="loading">
+                  <i class="bi bi-x-circle me-2"></i>
+                  {{ isEditMode ? 'Cancelar' : 'Limpiar' }}
+                </button>
+                <button type="button" class="btn btn-primary btn-lg px-5"
+                        (click)="currentStep = 2"
+                        [disabled]="form.invalid || loading">
+                  Continuar
+                  <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Contenido -->
-          <div class="card-body p-4 p-md-5">
-            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <!-- Paso 2: Responsables -->
+          <div *ngIf="currentStep === 2" class="step-content animate__animated animate__fadeIn">
+            <h5 class="step-title mb-4 pb-2 border-bottom">
+              <i class="bi bi-person-badge text-primary me-2"></i>
+              Responsables y Contactos
+              <span class="badge bg-secondary-subtle text-secondary ms-2 fs-7">Opcional</span>
+            </h5>
 
+            <div class="alert alert-info border-0 bg-info-subtle mb-4">
+              <i class="bi bi-info-circle me-2"></i>
+              Los siguientes campos son opcionales. Puede asignarlos ahora o más tarde.
+            </div>
 
-             <!-- Paso 1: Información principal -->
-<div *ngIf="currentStep === 1" class="animate__animated animate__fadeIn">
-  <h5 class="mb-4 pb-3 border-bottom border-primary-subtle text-primary fw-bold">
-    <i class="bi bi-info-circle-fill me-2"></i> Información principal
-  </h5>
+            <div class="row g-4">
+              <!-- Columna Izquierda -->
+              <div class="col-md-6">
+                <h6 class="text-muted mb-3">
+                  <i class="bi bi-building me-2"></i>
+                  Cliente Solicitante
+                </h6>
+                
+                <!-- Jefatura Cliente -->
+                <div class="form-group mb-4">
+                  <label class="form-label fw-medium">Jefatura Cliente</label>
+                  <select class="form-select" formControlName="idJefaturaClienteSolicitante">
+                    <option [ngValue]="null">-- No asignado --</option>
+                    <option *ngFor="let j of jefaturasCliente" [ngValue]="j.id">
+                      {{ j.label }}
+                    </option>
+                  </select>
+                </div>
 
-  <div class="row g-4 g-md-5">
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <select class="form-select" formControlName="idCliente"
-                [class.is-invalid]="submitted && f['idCliente'].invalid">
-          <option [ngValue]="null">Seleccione cliente...</option>
-          <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.label }}</option>
-        </select>
-        <label>Cliente <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-    </div>
+                <!-- Analista Cliente -->
+                <div class="form-group mb-4">
+                  <label class="form-label fw-medium">Analista Cliente</label>
+                  <select class="form-select" formControlName="idAnalistaClienteSolicitante">
+                    <option [ngValue]="null">-- No asignado --</option>
+                    <option *ngFor="let a of analistasCliente" [ngValue]="a.id">
+                      {{ a.label }}
+                    </option>
+                  </select>
+                </div>
 
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <select class="form-select" formControlName="idArea"
-                [class.is-invalid]="submitted && f['idArea'].invalid"
-                [disabled]="!f['idCliente'].value">
-          <option [ngValue]="null">Seleccione área...</option>
-          <option *ngFor="let a of areas" [ngValue]="a.id">{{ a.label }}</option>
-        </select>
-        <label>Área <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-      <small class="text-muted form-text" *ngIf="!f['idCliente'].value">
-        <i class="bi bi-info-circle me-1"></i>Seleccione un cliente primero
-      </small>
-    </div>
-
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <input type="date" class="form-control" formControlName="fechaApertura"
-               [class.is-invalid]="submitted && f['fechaApertura'].invalid">
-        <label>Fecha de Apertura <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-    </div>
-
-    <!-- Proyecto -->
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <select class="form-select" formControlName="idProyecto"
-                [class.is-invalid]="submitted && f['idProyecto'].invalid">
-          <option [ngValue]="null">Seleccione proyecto...</option>
-          <option *ngFor="let p of proyectos" [ngValue]="p.id">{{ p.label }}</option>
-        </select>
-        <label>Proyecto <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-    </div>
-
-    <!-- Fase -->
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <select class="form-select" formControlName="idFase"
-                [class.is-invalid]="submitted && f['idFase'].invalid">
-          <option [ngValue]="null">Seleccione fase...</option>
-          <option *ngFor="let f of fases" [ngValue]="f.id">{{ f.label }}</option>
-        </select>
-        <label>Fase <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-    </div>
-
-    <!-- Site -->
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <select class="form-select" formControlName="idSite"
-                [class.is-invalid]="submitted && f['idSite'].invalid">
-          <option [ngValue]="null">Seleccione site...</option>
-          <option *ngFor="let s of sites" [ngValue]="s.id">{{ s.label }}</option>
-        </select>
-        <label>Site <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-    </div>
-
-    <!-- Región -->
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <select class="form-select" formControlName="idRegion"
-                [class.is-invalid]="submitted && f['idRegion'].invalid">
-          <option [ngValue]="null">Seleccione región...</option>
-          <option *ngFor="let r of regiones" [ngValue]="r.id">{{ r.label }}</option>
-        </select>
-        <label>Región <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-    </div>
-
-    <!-- OT Anterior -->
-    <div class="col-md-6 col-lg-4">
-      <div class="form-floating mb-1">
-        <input type="number" class="form-control" formControlName="idOtsAnterior" min="1" placeholder=" ">
-        <label>OT Anterior (opcional)</label>
-      </div>
-    </div>
-
-    <!-- Descripción -->
-    <div class="col-12">
-      <div class="form-floating mb-1">
-        <textarea class="form-control" formControlName="descripcion" rows="3"
-                  [readonly]="!isEditMode" placeholder=" "></textarea>
-        <label>Descripción <span class="text-danger">*</span></label>
-        <div class="invalid-feedback">Campo obligatorio</div>
-      </div>
-      <small class="form-text text-muted" *ngIf="!isEditMode">
-        <i class="bi bi-stars me-1 text-warning"></i> Generada automáticamente según selección
-      </small>
-    </div>
-  </div>
-
-
-
-                <div class="d-flex justify-content-end mt-5 pt-4 gap-3 border-top">
-                  <button type="button" class="btn btn-outline-secondary btn-lg px-5"
-                          (click)="resetForm()" [disabled]="loading">
-                    <i class="bi bi-arrow-counterclockwise me-2"></i> Limpiar
-                  </button>
-                  <button type="button" class="btn btn-primary btn-lg px-5 shadow"
-                          (click)="currentStep = 2" [disabled]="form.invalid || loading">
-                    Siguiente <i class="bi bi-arrow-right-short ms-2"></i>
-                  </button>
+                <!-- Coordinador TI/CW -->
+                <div class="form-group mb-4">
+                  <label class="form-label fw-medium">Coordinador TI/CW</label>
+                  <select class="form-select" formControlName="idCoordinadorTiCw">
+                    <option [ngValue]="null">-- No asignado --</option>
+                    <option *ngFor="let c of coordinadoresTiCw" [ngValue]="c.id">
+                      {{ c.label }}
+                    </option>
+                  </select>
                 </div>
               </div>
 
-              <!-- Paso 2: Responsables -->
-              <div *ngIf="currentStep === 2" class="animate__animated animate__fadeIn">
-                <h5 class="mb-4 pb-3 border-bottom border-primary-subtle text-primary fw-bold">
-                  <i class="bi bi-people-fill me-2"></i> Responsables y Solicitantes
-                </h5>
+              <!-- Columna Derecha -->
+              <div class="col-md-6">
+                <h6 class="text-muted mb-3">
+                  <i class="bi bi-person-gear me-2"></i>
+                  Responsables Internos
+                </h6>
 
-                <div class="row g-4 g-md-5">
-                  <div class="col-md-6 col-lg-4">
-                    <div class="form-floating mb-1">
-                      <select class="form-select" formControlName="idJefaturaClienteSolicitante">
-                        <option [ngValue]="null">-- Seleccionar --</option>
-                        <option *ngFor="let j of jefaturasCliente" [ngValue]="j.id">{{ j.label }}</option>
-                      </select>
-                      <label>Jefatura Cliente</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 col-lg-4">
-                    <div class="form-floating mb-1">
-                      <select class="form-select" formControlName="idAnalistaClienteSolicitante">
-                        <option [ngValue]="null">-- Seleccionar --</option>
-                        <option *ngFor="let a of analistasCliente" [ngValue]="a.id">{{ a.label }}</option>
-                      </select>
-                      <label>Analista Cliente</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 col-lg-4">
-                    <div class="form-floating mb-1">
-                      <select class="form-select" formControlName="idCoordinadorTiCw">
-                        <option [ngValue]="null">-- Seleccionar --</option>
-                        <option *ngFor="let c of coordinadoresTiCw" [ngValue]="c.id">{{ c.label }}</option>
-                      </select>
-                      <label>Coordinador TI/CW</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 col-lg-4">
-                    <div class="form-floating mb-1">
-                      <select class="form-select" formControlName="idJefaturaResponsable">
-                        <option [ngValue]="null">-- Seleccionar --</option>
-                        <option *ngFor="let j of jefaturasResponsable" [ngValue]="j.id">{{ j.label }}</option>
-                      </select>
-                      <label>Jefatura Responsable</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 col-lg-4">
-                    <div class="form-floating mb-1">
-                      <select class="form-select" formControlName="idLiquidador">
-                        <option [ngValue]="null">-- Seleccionar --</option>
-                        <option *ngFor="let l of liquidadores" [ngValue]="l.id">{{ l.label }}</option>
-                      </select>
-                      <label>Liquidador</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 col-lg-4">
-                    <div class="form-floating mb-1">
-                      <select class="form-select" formControlName="idEjecutante">
-                        <option [ngValue]="null">-- Seleccionar --</option>
-                        <option *ngFor="let e of ejecutantes" [ngValue]="e.id">{{ e.label }}</option>
-                      </select>
-                      <label>Ejecutante</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 col-lg-4">
-                    <div class="form-floating mb-1">
-                      <select class="form-select" formControlName="idAnalistaContable">
-                        <option [ngValue]="null">-- Seleccionar --</option>
-                        <option *ngFor="let a of analistasContable" [ngValue]="a.id">{{ a.label }}</option>
-                      </select>
-                      <label>Analista Contable</label>
-                    </div>
-                  </div>
+                <!-- Jefatura Responsable -->
+                <div class="form-group mb-4">
+                  <label class="form-label fw-medium">Jefatura Responsable</label>
+                  <select class="form-select" formControlName="idJefaturaResponsable">
+                    <option [ngValue]="null">-- No asignado --</option>
+                    <option *ngFor="let j of jefaturasResponsable" [ngValue]="j.id">
+                      {{ j.label }}
+                    </option>
+                  </select>
                 </div>
 
-                <div class="d-flex justify-content-between mt-5 pt-4 gap-3 border-top">
-                  <button type="button" class="btn btn-outline-secondary btn-lg px-5"
-                          (click)="currentStep = 1">
-                    <i class="bi bi-arrow-left-short me-2"></i> Anterior
-                  </button>
-                  <button type="button" class="btn btn-primary btn-lg px-5 shadow"
-                          (click)="currentStep = 3">
-                    Siguiente <i class="bi bi-arrow-right-short ms-2"></i>
-                  </button>
+                <!-- Liquidador -->
+                <div class="form-group mb-4">
+                  <label class="form-label fw-medium">Liquidador</label>
+                  <select class="form-select" formControlName="idLiquidador">
+                    <option [ngValue]="null">-- No asignado --</option>
+                    <option *ngFor="let l of liquidadores" [ngValue]="l.id">
+                      {{ l.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Ejecutante -->
+                <div class="form-group mb-4">
+                  <label class="form-label fw-medium">Ejecutante</label>
+                  <select class="form-select" formControlName="idEjecutante">
+                    <option [ngValue]="null">-- No asignado --</option>
+                    <option *ngFor="let e of ejecutantes" [ngValue]="e.id">
+                      {{ e.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Analista Contable -->
+                <div class="form-group mb-4">
+                  <label class="form-label fw-medium">Analista Contable</label>
+                  <select class="form-select" formControlName="idAnalistaContable">
+                    <option [ngValue]="null">-- No asignado --</option>
+                    <option *ngFor="let a of analistasContable" [ngValue]="a.id">
+                      {{ a.label }}
+                    </option>
+                  </select>
                 </div>
               </div>
+            </div>
 
-              <!-- Paso 3: Resumen -->
-              <div *ngIf="currentStep === 3" class="animate__animated animate__fadeIn">
-                <h5 class="mb-4 pb-3 border-bottom border-primary-subtle text-primary fw-bold">
-                  <i class="bi bi-check2-all me-2"></i> Resumen y Confirmación
-                </h5>
+            <!-- Botones paso 2 -->
+            <div class="step-actions mt-5 pt-4 border-top">
+              <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary btn-lg px-4"
+                        (click)="currentStep = 1">
+                  <i class="bi bi-arrow-left me-2"></i>
+                  Regresar
+                </button>
+                <button type="button" class="btn btn-primary btn-lg px-5"
+                        (click)="currentStep = 3">
+                  Continuar
+                  <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+              </div>
+            </div>
+          </div>
 
-                <div class="row g-4 mb-5">
-                  <div class="col-md-6">
-                    <div class="card border-0 shadow-sm bg-light rounded-4 h-100">
-                      <div class="card-body p-4">
-                        <h6 class="card-title text-primary fw-bold mb-3">Información principal</h6>
-                        <dl class="row mb-0 g-2 small">
-                          <dt class="col-5 text-muted">Cliente</dt><dd class="col-7">{{ clienteNombre || '—' }}</dd>
-                          <dt class="col-5 text-muted">Área</dt><dd class="col-7">{{ areaNombre || '—' }}</dd>
-                          <dt class="col-5 text-muted">Proyecto</dt><dd class="col-7">{{ proyectoNombre || '—' }}</dd>
-                          <dt class="col-5 text-muted">Fase</dt><dd class="col-7">{{ faseNombre || '—' }}</dd>
-                          <dt class="col-5 text-muted">Site</dt><dd class="col-7">{{ siteNombre || '—' }}</dd>
-                          <dt class="col-5 text-muted">Región</dt><dd class="col-7">{{ regionNombre || '—' }}</dd>
-                          <dt class="col-5 text-muted">Fecha Apertura</dt><dd class="col-7">{{ fechaAperturaFormatted || '—' }}</dd>
-                        </dl>
+          <!-- Paso 3: Confirmar -->
+          <div *ngIf="currentStep === 3" class="step-content animate__animated animate__fadeIn">
+            <h5 class="step-title mb-4 pb-2 border-bottom">
+              <i class="bi bi-clipboard-check text-primary me-2"></i>
+              Confirmación de Datos
+            </h5>
+
+            <div class="alert alert-success border-0 bg-success-subtle mb-5">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill text-success fs-4 me-3"></i>
+                <div>
+                  <h6 class="alert-heading mb-1">¡Revisión final!</h6>
+                  <p class="mb-0">Verifique que toda la información sea correcta antes de guardar.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen en tarjetas -->
+            <div class="row g-4 mb-5">
+              <!-- Información Principal -->
+              <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0 fw-bold text-primary">
+                      <i class="bi bi-card-checklist me-2"></i>
+                      Información Principal
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">Cliente</small>
+                          <p class="fw-medium mb-0">{{ clienteNombre || '—' }}</p>
+                        </div>
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">Área</small>
+                          <p class="fw-medium mb-0">{{ areaNombre || '—' }}</p>
+                        </div>
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">Proyecto</small>
+                          <p class="fw-medium mb-0">{{ proyectoNombre || '—' }}</p>
+                        </div>
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">Fase</small>
+                          <p class="fw-medium mb-0">{{ faseNombre || '—' }}</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">Site</small>
+                          <p class="fw-medium mb-0">{{ siteNombre || '—' }}</p>
+                        </div>
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">Región</small>
+                          <p class="fw-medium mb-0">{{ regionNombre || '—' }}</p>
+                        </div>
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">Fecha Apertura</small>
+                          <p class="fw-medium mb-0">{{ fechaAperturaFormatted || '—' }}</p>
+                        </div>
+                        <div class="mb-3">
+                          <small class="text-muted d-block mb-1">OT Anterior</small>
+                          <p class="fw-medium mb-0">{{ form.value.idOtsAnterior || 'No especificada' }}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div class="col-md-6">
-                    <div class="card border-0 shadow-sm bg-light rounded-4 h-100">
-                      <div class="card-body p-4">
-                        <h6 class="card-title text-primary fw-bold mb-3">Descripción</h6>
-                        <p class="mb-0 text-muted" style="white-space: pre-wrap;">
-                          {{ form.value.descripcion || 'Descripción generada automáticamente según selección' }}
-                        </p>
+                    
+                    <div class="mt-4">
+                      <small class="text-muted d-block mb-1">Descripción</small>
+                      <div class="bg-light p-3 rounded border">
+                        <p class="mb-0 text-muted">{{ form.value.descripcion || 'Descripción automática' }}</p>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis shadow-sm p-4 mb-5">
-                  <i class="bi bi-info-circle-fill me-2 fs-4"></i>
-                  Verifique que todos los datos sean correctos antes de guardar.
+              <!-- Responsables -->
+              <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-white border-bottom">
+                    <h6 class="mb-0 fw-bold text-primary">
+                      <i class="bi bi-people me-2"></i>
+                      Responsables
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">Jefatura Cliente</small>
+                      <p class="fw-medium mb-0 small">
+                        {{ getResponsableNombre('jefaturaCliente') || 'No asignado' }}
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">Analista Cliente</small>
+                      <p class="fw-medium mb-0 small">
+                        {{ getResponsableNombre('analistaCliente') || 'No asignado' }}
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">Coordinador TI/CW</small>
+                      <p class="fw-medium mb-0 small">
+                        {{ getResponsableNombre('coordinadorTiCw') || 'No asignado' }}
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">Jefatura Responsable</small>
+                      <p class="fw-medium mb-0 small">
+                        {{ getResponsableNombre('jefaturaResponsable') || 'No asignado' }}
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">Liquidador</small>
+                      <p class="fw-medium mb-0 small">
+                        {{ getResponsableNombre('liquidador') || 'No asignado' }}
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">Ejecutante</small>
+                      <p class="fw-medium mb-0 small">
+                        {{ getResponsableNombre('ejecutante') || 'No asignado' }}
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">Analista Contable</small>
+                      <p class="fw-medium mb-0 small">
+                        {{ getResponsableNombre('analistaContable') || 'No asignado' }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-end mt-5 pt-4 border-top">
-                  <button type="button" class="btn btn-outline-secondary btn-lg px-5"
-                          (click)="currentStep = 2" [disabled]="loading">
-                    <i class="bi bi-arrow-left-short me-2"></i> Regresar
+            <!-- Botones finales -->
+            <div class="step-actions mt-5 pt-4 border-top">
+              <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary btn-lg px-4"
+                        (click)="currentStep = 2">
+                  <i class="bi bi-arrow-left me-2"></i>
+                  Regresar
+                </button>
+                
+                <div class="d-flex gap-3">
+                  <button type="button" class="btn btn-outline-danger btn-lg px-4"
+                          (click)="onCancel()">
+                    Cancelar
                   </button>
-
-                  <button type="submit" class="btn btn-success btn-lg px-5 shadow-lg"
+                  <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm"
                           [disabled]="loading || form.invalid">
                     <ng-container *ngIf="!loading">
-                      <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save-fill' : 'bi-check2-circle-fill'"></i>
-                      {{ isEditMode ? 'Guardar Cambios' : 'Crear Orden de Trabajo' }}
+                      <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>
+                      {{ isEditMode ? 'Guardar Cambios' : 'Crear OT' }}
                     </ng-container>
                     <ng-container *ngIf="loading">
                       <span class="spinner-border spinner-border-sm me-2"></span>
-                      Procesando...
+                      {{ isEditMode ? 'Guardando...' : 'Creando...' }}
                     </ng-container>
                   </button>
                 </div>
               </div>
-
-            </form>
+            </div>
           </div>
-
-          <div class="card-footer bg-light-subtle text-muted small text-center py-3 border-0">
-            <i class="bi bi-lock-fill me-1"></i>
-            Campos con <span class="text-danger">*</span> son obligatorios • Datos confidenciales y protegidos
-          </div>
-        </div>
-      </ng-container>
+        </form>
+      </div>
     </div>
-  </div>
+
+    <!-- Footer -->
+    <div class="form-footer bg-light border-top p-3 text-center text-muted small">
+      <i class="bi bi-shield-lock me-1"></i>
+      Todos los datos están protegidos • 
+      <span class="text-danger">*</span> Campos obligatorios
+    </div>
+  </ng-container>
 </div>

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
@@ -11,7 +11,7 @@ import { OtDetailResponse } from '../../../model/ots';
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './ot-detail-component.html',
-  styleUrls: ['./ot-detail-component.css'],
+  styleUrls: ['./ot-detail-component.css']
 })
 export class OtDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -19,13 +19,23 @@ export class OtDetailComponent implements OnInit {
   private otService = inject(OtService);
 
   @Input() otId?: number;
-  @Input() otDetail?: OtDetailResponse; // Para uso directo desde modal
+  @Input() otDetail?: OtDetailResponse;
+  @Input() onClose: () => void = () => {
+    // Default close behavior
+    const modalElement = document.querySelector('.modal.show');
+    if (modalElement) {
+      (modalElement as HTMLElement).click();
+    } else {
+      this.router.navigate(['/ot']);
+    }
+  };
+
+  @Output() closed = new EventEmitter<void>();
 
   ot: OtDetailResponse | null = null;
   loading = true;
   errorMessage = '';
 
-  // Estados del flujo de trabajo
   estados: string[] = [
     'ASIGNACION',
     'PRESUPUESTO ENVIADO',
@@ -38,16 +48,13 @@ export class OtDetailComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    // Si ya se pasó el detalle directamente (desde modal)
     if (this.otDetail) {
       this.ot = this.otDetail;
       this.loading = false;
       return;
     }
 
-    // Obtener ID desde input o parámetro de ruta
     let id: number;
-
     if (this.otId !== undefined) {
       id = this.otId;
     } else {
@@ -77,101 +84,63 @@ export class OtDetailComponent implements OnInit {
     });
   }
 
-  // Timeline functions
   get currentEstadoIndex(): number {
     if (!this.ot?.estadoOt) return -1;
     const idx = this.estados.indexOf(this.ot.estadoOt);
     return idx >= 0 ? idx : -1;
   }
 
-  getEstadoClass(index: number): string {
-    if (index < this.currentEstadoIndex) return 'bg-success text-white';
-    if (index === this.currentEstadoIndex) return 'bg-primary text-white shadow-lg';
-    if (this.ot?.estadoOt === 'CANCELADA' && index === this.estados.length - 1) {
-      return 'bg-danger text-white';
-    }
-    return 'bg-secondary text-white opacity-75';
-  }
-
   getIconoEstado(index: number): string {
     const icons = [
-      'bi-person-plus',           // ASIGNACION
-      'bi-envelope-paper',        // PRESUPUESTO ENVIADO
-      'bi-cart-check',            // CREACION DE OC
-      'bi-gear-wide-connected',   // EN_EJECUCION
-      'bi-calculator',            // EN_LIQUIDACION
-      'bi-receipt-cutoff',        // EN_FACTURACION
-      'bi-check2-circle',         // FINALIZADO
-      'bi-x-octagon'              // CANCELADA
+      'bi-person-plus',
+      'bi-envelope-paper',
+      'bi-cart-check',
+      'bi-gear-wide-connected',
+      'bi-calculator',
+      'bi-receipt-cutoff',
+      'bi-check2-circle',
+      'bi-x-octagon'
     ];
     return icons[index] || 'bi-question-circle';
+  }
+
+  getEstadoIcon(estado?: string | null): string {
+    if (!estado) return 'bi-question-circle';
+    
+    const estadoUpper = estado.toUpperCase();
+    if (estadoUpper.includes('FINALIZADO')) return 'bi-check2-circle';
+    if (estadoUpper.includes('CANCELADA')) return 'bi-x-octagon';
+    if (estadoUpper.includes('EJECUCION')) return 'bi-play-circle';
+    if (estadoUpper.includes('LIQUIDACION')) return 'bi-calculator';
+    if (estadoUpper.includes('FACTURACION')) return 'bi-receipt';
+    if (estadoUpper.includes('PRESUPUESTO')) return 'bi-envelope-paper';
+    if (estadoUpper.includes('ASIGNACION')) return 'bi-person-plus';
+    if (estadoUpper.includes('CREACION')) return 'bi-cart-check';
+    
+    return 'bi-clock';
   }
 
   getEstadoBadgeClass(estado?: string | null): string {
     if (!estado) return 'bg-secondary';
 
-    switch (estado.toUpperCase()) {
-      case 'FINALIZADO':
-        return 'bg-success';
-      case 'CANCELADA':
-        return 'bg-danger';
-      case 'EN_EJECUCION':
-      case 'EN_LIQUIDACION':
-      case 'EN_FACTURACION':
-      case 'CREACION DE OC':
-        return 'bg-warning text-dark';
-      case 'PRESUPUESTO ENVIADO':
-      case 'ASIGNACION':
-        return 'bg-info';
-      default:
-        return 'bg-primary';
+    const estadoUpper = estado.toUpperCase();
+    if (estadoUpper.includes('FINALIZADO')) return 'bg-success';
+    if (estadoUpper.includes('CANCELADA')) return 'bg-danger';
+    if (estadoUpper.includes('EJECUCION') || estadoUpper.includes('LIQUIDACION') || 
+        estadoUpper.includes('FACTURACION') || estadoUpper.includes('CREACION')) {
+      return 'bg-warning';
     }
-  }
-
-  private mostrarError(mensaje: string): void {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: mensaje,
-      confirmButtonColor: '#dc3545',
-      customClass: {
-        container: 'swal2-container-modal'
-      }
-    }).then(() => this.volver());
-  }
-
-  volver(): void {
-    // Cierra el modal si estamos en contexto modal
-    const modalElement = document.querySelector('.modal.show');
-    if (modalElement) {
-      (modalElement as HTMLElement).click(); // Simula clic fuera para cerrar
-    } else {
-      this.router.navigate(['/ot']);
+    if (estadoUpper.includes('PRESUPUESTO') || estadoUpper.includes('ASIGNACION')) {
+      return 'bg-info';
     }
+    return 'bg-primary';
   }
 
-  editarOt(): void {
-    if (this.ot?.idOts) {
-      // Cerrar modal primero si estamos en uno
-      const modalElement = document.querySelector('.modal.show');
-      if (modalElement) {
-        (modalElement as HTMLElement).click();
-      }
-      
-      // Navegar a edición después de un breve delay
-      setTimeout(() => {
-        this.router.navigate(['/ot/edit', this.ot!.idOts]);
-      }, 300);
-    }
-  }
-
-  // Helper para calcular progreso
   get progressPercentage(): number {
     if (this.currentEstadoIndex < 0) return 0;
     return Math.round(((this.currentEstadoIndex + 1) / this.estados.length) * 100);
   }
 
-  // Formatear fechas
   formatDate(dateString?: string | null): string {
     if (!dateString) return '—';
     const date = new Date(dateString);
@@ -192,5 +161,39 @@ export class OtDetailComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  private mostrarError(mensaje: string): void {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: mensaje,
+      confirmButtonColor: '#dc3545',
+      customClass: {
+        container: 'swal2-container-modal'
+      }
+    }).then(() => this.onClose());
+  }
+
+  closeModal(): void {
+    this.onClose();
+    this.closed.emit();
+  }
+
+  editarOt(): void {
+    if (this.ot?.idOts) {
+      this.onClose();
+      
+      setTimeout(() => {
+        if (this.ot?.idOts) {
+          this.router.navigate(['/ot/edit', this.ot.idOts]);
+        }
+      }, 300);
+    }
+  }
+
+  // Método alias para compatibilidad
+  volver(): void {
+    this.onClose();
   }
 }
