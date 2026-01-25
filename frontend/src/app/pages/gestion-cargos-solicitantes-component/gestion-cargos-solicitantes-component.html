@@ -1,133 +1,256 @@
-<div class="container mt-4">
-  <h2>{{ getTitulo() }}</h2>
+<div class="cargos-solicitantes-container bg-light min-vh-100 py-4">
+  <!-- Header Principal -->
+  <div class="container">
+    <div class="page-header mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="header-icon bg-primary-gradient rounded-3 p-3 shadow-sm">
+            <i class="bi bi-people-fill text-white fs-2"></i>
+          </div>
+          <div>
+            <h1 class="page-title mb-1">Gestión de Cargos Solicitantes</h1>
+            <p class="page-subtitle text-muted mb-0">
+              Administra analistas y jefaturas para clientes solicitantes
+            </p>
+          </div>
+        </div>
+        
+        <!-- Botón Nueva Entidad -->
+        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateForm()">
+          <i class="bi bi-plus-circle me-2"></i>
+          Nuevo {{ modo === 'JEFATURA' ? 'Jefatura' : 'Analista' }}
+        </button>
+      </div>
+    </div>
 
-  <!-- Pestañas (solo Analistas y Jefaturas) -->
-  <ul class="nav nav-tabs mb-4">
-    <li class="nav-item">
-      <button class="nav-link" [class.active]="modo === 'ANALISTA'" (click)="cambiarModo('ANALISTA')">
-        Analistas
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" [class.active]="modo === 'JEFATURA'" (click)="cambiarModo('JEFATURA')">
-        Jefaturas
-      </button>
-    </li>
-  </ul>
+    <!-- Pestañas de Navegación -->
+    <div class="nav-tabs-custom mb-4">
+      <div class="d-flex border-bottom">
+        <button class="nav-tab" [class.active]="modo === 'ANALISTA'" (click)="cambiarModo('ANALISTA')">
+          <i class="bi bi-person-badge me-2"></i>
+          Analistas Cliente
+          <span class="tab-badge">{{ getContador('ANALISTA') }}</span>
+        </button>
+        <button class="nav-tab" [class.active]="modo === 'JEFATURA'" (click)="cambiarModo('JEFATURA')">
+          <i class="bi bi-person-vcard me-2"></i>
+          Jefaturas Cliente
+          <span class="tab-badge">{{ getContador('JEFATURA') }}</span>
+        </button>
+      </div>
+    </div>
 
-  <!-- Mensaje de error -->
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    {{ errorMessage }}
+    <!-- Barra de Búsqueda -->
+    <div class="search-bar mb-4">
+      <div class="input-group input-group-lg shadow-sm">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="bi bi-search text-muted"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control border-start-0"
+          placeholder="Buscar por descripción..."
+          [(ngModel)]="searchDescripcion"
+          (input)="onSearchChange()"
+        />
+        <button class="btn btn-outline-secondary" type="button" (click)="searchDescripcion = ''; onSearchChange()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Contador de Resultados -->
+    <div class="results-info mb-3">
+      <span class="text-muted">
+        Mostrando <strong>{{ cargos.length }}</strong> de <strong>{{ cargosOriginal.length }}</strong> registros
+      </span>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading && cargos.length === 0" class="loading-container text-center py-5">
+      <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+      <p class="mt-3 text-muted">Cargando datos...</p>
+    </div>
+
+    <!-- Mensaje de Error -->
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = null"></button>
+    </div>
+
+    <!-- Grid de Tarjetas -->
+    <div *ngIf="!isLoading || cargos.length > 0" class="row g-4">
+      <ng-container *ngFor="let cargo of cargos">
+        <div class="col-md-6 col-lg-4">
+          <div class="cargo-card" [class.inactive]="!cargo.activo">
+            <div class="cargo-header">
+              <div class="cargo-icon" [ngClass]="getCargoIconClass(cargo)">
+                <i class="bi" [ngClass]="getCargoIcon(cargo)"></i>
+              </div>
+              <div class="cargo-status">
+                <span class="badge status-badge" [ngClass]="cargo.activo ? 'bg-success' : 'bg-secondary'">
+                  {{ cargo.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="cargo-body">
+              <div class="cargo-id">
+                <small class="text-muted">ID:</small>
+                <span class="ms-1 fw-medium">#{{ cargo.id }}</span>
+              </div>
+              
+              <h5 class="cargo-title">{{ cargo.descripcion }}</h5>
+              
+              <div class="cargo-type">
+                <span class="badge type-badge" [ngClass]="getTipoBadgeClass(cargo)">
+                  {{ cargo.tipo === 'ANALISTA' ? 'Analista' : 'Jefatura' }}
+                </span>
+              </div>
+              
+             
+            </div>
+            
+            <div class="cargo-actions">
+              <button class="btn btn-outline-primary btn-sm" (click)="openEditModal(cargo)">
+                <i class="bi bi-pencil-square me-1"></i>
+                Editar
+              </button>
+              <button class="btn btn-sm ms-2" 
+                      [ngClass]="cargo.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+                      (click)="toggleActivo(cargo)">
+                <i class="bi me-1" [ngClass]="cargo.activo ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
+                {{ cargo.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Estado vacío -->
+      <div *ngIf="cargos.length === 0 && !isLoading" class="col-12">
+        <div class="empty-state text-center py-5">
+          <div class="empty-icon mb-3">
+            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+          </div>
+          <h4 class="text-muted mb-2">No se encontraron registros</h4>
+          <p class="text-muted mb-4">
+            No hay {{ modo === 'JEFATURA' ? 'jefaturas' : 'analistas' }} registrados en el sistema.
+          </p>
+          <button class="btn btn-primary" (click)="openCreateForm()">
+            <i class="bi bi-plus-circle me-2"></i>
+            Crear nuevo
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Buscador + botón nuevo -->
-  <div class="row mb-3 align-items-center">
-    <div class="col-md-6">
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Buscar por descripción..."
-        [(ngModel)]="searchDescripcion"
-        (input)="onSearchChange()"
-      />
-    </div>
-    <div class="col-md-6 text-end">
-      <button class="btn btn-primary" (click)="openCreateForm()">
-        + Nuevo {{ modo === 'JEFATURA' ? 'Jefatura' : 'Analista' }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Formulario -->
-  <div *ngIf="showForm" class="card mb-4">
-    <div class="card-body">
-      <h5>{{ isEditMode ? 'Editar' : 'Nuevo' }} {{ currentCargo.tipo === 'JEFATURA' ? 'Jefatura' : 'Analista' }}</h5>
-
-      <form (ngSubmit)="saveCargo()">
-        <div class="mb-3">
-          <label class="form-label">Descripción <span class="text-danger">*</span></label>
-          <input
-            type="text"
-            class="form-control"
-            [(ngModel)]="currentCargo.descripcion"
-            name="descripcion"
-            required
-            maxlength="150"
-          />
+  <!-- Modal para Formulario -->
+  <div *ngIf="showForm" class="modal-overlay" (click)="cancelForm()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-content shadow-lg">
+        <!-- Header del Modal -->
+        <div class="modal-header bg-primary-gradient text-white">
+          <div class="modal-icon">
+            <i class="bi" [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0">
+              {{ isEditMode ? 'Editar' : 'Nuevo' }} {{ currentCargo.tipo === 'JEFATURA' ? 'Jefatura' : 'Analista' }}
+            </h5>
+            <small class="opacity-75">
+              {{ isEditMode ? 'Modifica los datos del registro' : 'Complete los datos del nuevo registro' }}
+            </small>
+          </div>
+          <button type="button" class="btn-close btn-close-white" (click)="cancelForm()"></button>
         </div>
 
-        <!-- Ya no mostramos selector de tipo (siempre coincide con la pestaña) -->
+        <!-- Body del Modal -->
+        <div class="modal-body">
+          <form (ngSubmit)="saveCargo()" #cargoForm="ngForm">
+            <!-- Campo Descripción -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-medium">
+                Descripción <span class="text-danger">*</span>
+                <span class="form-hint">(Máximo 150 caracteres)</span>
+              </label>
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                [(ngModel)]="currentCargo.descripcion"
+                name="descripcion"
+                required
+                maxlength="150"
+                placeholder="Ingrese la descripción del cargo"
+                [class.is-invalid]="cargoForm.submitted && !currentCargo.descripcion.trim()"
+              >
+              <div *ngIf="cargoForm.submitted && !currentCargo.descripcion.trim()" class="invalid-feedback">
+                La descripción es obligatoria
+              </div>
+              <div class="mt-1 text-end">
+                <small class="text-muted">
+                  {{ currentCargo.descripcion.length || 0 }}/150 caracteres
+                </small>
+              </div>
+            </div>
 
-        <div class="d-flex gap-2">
-          <button
-            type="submit"
-            class="btn btn-success"
-            [disabled]="isLoading || !currentCargo.descripcion.trim()"
-          >
-            {{ isLoading ? 'Guardando...' : 'Guardar' }}
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="cancelForm()">
-            Cancelar
-          </button>
+            <!-- Campo Tipo (solo lectura en modal) -->
+            <div class="form-group mb-4">
+              <label class="form-label fw-medium">Tipo de Cargo</label>
+              <div class="form-control-static bg-light p-3 rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge" [ngClass]="getTipoBadgeClass(currentCargo)">
+                    {{ currentCargo.tipo === 'ANALISTA' ? 'Analista' : 'Jefatura' }}
+                  </span>
+                  <span class="text-muted small">
+                    {{ currentCargo.tipo === 'ANALISTA' 
+                      ? 'Analista Cliente Solicitante' 
+                      : 'Jefatura Cliente Solicitante' }}
+                  </span>
+                </div>
+              </div>
+              <small class="form-text text-muted">
+                El tipo se determina automáticamente según la pestaña seleccionada
+              </small>
+            </div>
+
+            <!-- Campo Estado -->
+            <div class="form-group mb-4" *ngIf="isEditMode">
+              <label class="form-label fw-medium">Estado</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch"
+                       id="activoSwitch" [(ngModel)]="currentCargo.activo" name="activo">
+                <label class="form-check-label" for="activoSwitch">
+                  {{ currentCargo.activo ? 'Activo' : 'Inactivo' }}
+                </label>
+              </div>
+              <small class="form-text text-muted">
+                Los registros inactivos no estarán disponibles para nuevas asignaciones
+              </small>
+            </div>
+
+            <!-- Botones del Modal -->
+            <div class="modal-footer border-top pt-4">
+              <button type="button" class="btn btn-outline-secondary" (click)="cancelForm()">
+                <i class="bi bi-x-lg me-2"></i>
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary"
+                      [disabled]="isLoading || !currentCargo.descripcion.trim()">
+                <ng-container *ngIf="!isLoading">
+                  <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>
+                  {{ isEditMode ? 'Guardar Cambios' : 'Crear Registro' }}
+                </ng-container>
+                <ng-container *ngIf="isLoading">
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  Guardando...
+                </ng-container>
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   </div>
-
-  <!-- Tabla -->
-  <div class="table-responsive" *ngIf="!isLoading || cargos.length > 0; else loading">
-    <table class="table table-striped table-hover">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Tipo</th>
-          <th>Descripción</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let cargo of cargos">
-          <td>{{ cargo.id }}</td>
-          <td>
-            <span class="badge bg-info">
-              {{ cargo.tipo === 'ANALISTA' ? 'Analista' : 'Jefatura' }}
-            </span>
-          </td>
-          <td>{{ cargo.descripcion }}</td>
-          <td>
-            <span class="badge" [ngClass]="cargo.activo ? 'bg-success' : 'bg-danger'">
-              {{ cargo.activo ? 'Activo' : 'Inactivo' }}
-            </span>
-          </td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary me-2" (click)="openEditForm(cargo)">
-              Editar
-            </button>
-            <button
-              class="btn btn-sm"
-              [ngClass]="cargo.activo ? 'btn-outline-danger' : 'btn-outline-success'"
-              (click)="toggleActivo(cargo)"
-            >
-              {{ cargo.activo ? 'Desactivar' : 'Activar' }}
-            </button>
-          </td>
-        </tr>
-
-        <tr *ngIf="cargos.length === 0 && !isLoading">
-          <td colspan="5" class="text-center text-muted py-4">
-            No se encontraron registros
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Loading -->
-  <ng-template #loading>
-    <div class="text-center my-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p>Cargando...</p>
-    </div>
-  </ng-template>
 </div>

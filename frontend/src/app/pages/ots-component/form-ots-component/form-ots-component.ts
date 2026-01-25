@@ -106,15 +106,17 @@ export class FormOtsComponent implements OnInit {
       descripcion: ['', Validators.required],
       fechaApertura: [hoy, Validators.required],
 
-      idJefaturaClienteSolicitante: [null],
-      idAnalistaClienteSolicitante: [null],
-      idCoordinadorTiCw: [null],
-      idJefaturaResponsable: [null],
-      idLiquidador: [null],
-      idEjecutante: [null],
-      idAnalistaContable: [null],
+      // TODOS LOS CAMPOS AHORA SON OBLIGATORIOS
+      idJefaturaClienteSolicitante: [null, Validators.required],
+      idAnalistaClienteSolicitante: [null, Validators.required],
+      idCoordinadorTiCw: [null, Validators.required],
+      idJefaturaResponsable: [null, Validators.required],
+      idLiquidador: [null, Validators.required],
+      idEjecutante: [null, Validators.required],
+      idAnalistaContable: [null, Validators.required],
 
-      idOtsAnterior: [null, [Validators.min(1), Validators.pattern('^[0-9]+$')]]
+      // ÚNICO CAMPO OPCIONAL
+      idOtsAnterior: [null]
     });
 
     if (!this.isEditMode) {
@@ -187,7 +189,7 @@ export class FormOtsComponent implements OnInit {
         break;
     }
 
-    return dropdown.find(item => item.id === value)?.label || '';
+    return dropdown.find(item => item.id === value)?.label || '—';
   }
 
   // Tipado seguro para f
@@ -331,7 +333,7 @@ export class FormOtsComponent implements OnInit {
       Swal.fire({
         icon: 'warning',
         title: 'Formulario incompleto',
-        text: 'Por favor completa los campos obligatorios marcados en rojo.',
+        text: 'Por favor completa todos los campos obligatorios.',
         confirmButtonColor: '#ffc107'
       });
       return;
@@ -358,6 +360,7 @@ export class FormOtsComponent implements OnInit {
 
       const values = this.form.getRawValue();
 
+      // AHORA TODOS LOS CAMPOS SON OBLIGATORIOS, ASÍ QUE NUNCA SERÁN null
       const payload: OtCreateRequest = {
         idOts: this.isEditMode ? Number(values.idOts) : undefined,
         idCliente: Number(values.idCliente),
@@ -366,16 +369,17 @@ export class FormOtsComponent implements OnInit {
         idFase: Number(values.idFase),
         idSite: Number(values.idSite),
         idRegion: Number(values.idRegion),
-        descripcion: (values.descripcion || '').trim(),
+        descripcion: values.descripcion.trim(),
         fechaApertura: values.fechaApertura,
         idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
-        idJefaturaClienteSolicitante: values.idJefaturaClienteSolicitante || null,
-        idAnalistaClienteSolicitante: values.idAnalistaClienteSolicitante || null,
-        idCoordinadorTiCw: values.idCoordinadorTiCw || null,
-        idJefaturaResponsable: values.idJefaturaResponsable || null,
-        idLiquidador: values.idLiquidador || null,
-        idEjecutante: values.idEjecutante || null,
-        idAnalistaContable: values.idAnalistaContable || null,
+        // TODOS OBLIGATORIOS AHORA
+        idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
+        idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
+        idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
+        idJefaturaResponsable: Number(values.idJefaturaResponsable),
+        idLiquidador: Number(values.idLiquidador),
+        idEjecutante: Number(values.idEjecutante),
+        idAnalistaContable: Number(values.idAnalistaContable),
       };
 
       this.otService.saveOt(payload).subscribe({
@@ -491,6 +495,27 @@ export class FormOtsComponent implements OnInit {
       this.submitted = true;
       const controlesPaso1 = ['idCliente', 'idArea', 'idProyecto', 'idFase', 'idSite', 'idRegion', 'fechaApertura', 'descripcion'];
       const invalidos = controlesPaso1.filter(control => this.f[control].invalid);
+      
+      if (invalidos.length > 0) {
+        const elemento = document.querySelector(`[formControlName="${invalidos[0]}"]`);
+        if (elemento) {
+          elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+    } else if (siguientePaso === 3 && this.currentStep === 2) {
+      // Validar paso 2 antes de continuar
+      this.submitted = true;
+      const controlesPaso2 = [
+        'idJefaturaClienteSolicitante', 
+        'idAnalistaClienteSolicitante', 
+        'idCoordinadorTiCw', 
+        'idJefaturaResponsable', 
+        'idLiquidador', 
+        'idEjecutante', 
+        'idAnalistaContable'
+      ];
+      const invalidos = controlesPaso2.filter(control => this.f[control].invalid);
       
       if (invalidos.length > 0) {
         const elemento = document.querySelector(`[formControlName="${invalidos[0]}"]`);

@@ -54,7 +54,7 @@
         <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
                 [class.active]="currentStep === 1"
                 [class.completed]="currentStep > 1"
-                (click)="currentStep = 1">
+                (click)="cambiarPaso(1)">
           <i class="bi bi-1-circle me-2"></i>
           Información Principal
         </button>
@@ -64,7 +64,7 @@
         <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
                 [class.active]="currentStep === 2"
                 [class.completed]="currentStep > 2"
-                (click)="currentStep = 2">
+                (click)="cambiarPaso(2)">
           <i class="bi bi-2-circle me-2"></i>
           Responsables
         </button>
@@ -73,7 +73,7 @@
         </div>
         <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
                 [class.active]="currentStep === 3"
-                (click)="currentStep = 3">
+                (click)="cambiarPaso(3)">
           <i class="bi bi-3-circle me-2"></i>
           Confirmar
         </button>
@@ -89,7 +89,7 @@
             <h5 class="step-title mb-4 pb-2 border-bottom">
               <i class="bi bi-card-checklist text-primary me-2"></i>
               Información Principal de la OT
-              <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Obligatorio</span>
+              <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Todos obligatorios</span>
             </h5>
 
             <div class="row g-4">
@@ -234,7 +234,7 @@
                   <input type="number" class="form-control form-control-lg" formControlName="idOtsAnterior"
                          min="1" placeholder="Número de OT anterior">
                   <small class="form-text text-muted">
-                    Número de OT previa si aplica
+                    Número de OT previa si aplica (único campo opcional)
                   </small>
                 </div>
               </div>
@@ -270,7 +270,7 @@
                   {{ isEditMode ? 'Cancelar' : 'Limpiar' }}
                 </button>
                 <button type="button" class="btn btn-primary btn-lg px-5"
-                        (click)="currentStep = 2"
+                        (click)="cambiarPaso(2)"
                         [disabled]="form.invalid || loading">
                   Continuar
                   <i class="bi bi-arrow-right ms-2"></i>
@@ -284,12 +284,12 @@
             <h5 class="step-title mb-4 pb-2 border-bottom">
               <i class="bi bi-person-badge text-primary me-2"></i>
               Responsables y Contactos
-              <span class="badge bg-secondary-subtle text-secondary ms-2 fs-7">Opcional</span>
+              <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Todos obligatorios</span>
             </h5>
 
             <div class="alert alert-info border-0 bg-info-subtle mb-4">
               <i class="bi bi-info-circle me-2"></i>
-              Los siguientes campos son opcionales. Puede asignarlos ahora o más tarde.
+              <strong>Todos los siguientes campos son obligatorios.</strong> Debe asignar todos los responsables para continuar.
             </div>
 
             <div class="row g-4">
@@ -302,35 +302,53 @@
                 
                 <!-- Jefatura Cliente -->
                 <div class="form-group mb-4">
-                  <label class="form-label fw-medium">Jefatura Cliente</label>
-                  <select class="form-select" formControlName="idJefaturaClienteSolicitante">
-                    <option [ngValue]="null">-- No asignado --</option>
+                  <label class="form-label fw-medium">
+                    Jefatura Cliente <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" formControlName="idJefaturaClienteSolicitante"
+                          [class.is-invalid]="submitted && f['idJefaturaClienteSolicitante'].invalid">
+                    <option [ngValue]="null">-- Seleccione jefatura --</option>
                     <option *ngFor="let j of jefaturasCliente" [ngValue]="j.id">
                       {{ j.label }}
                     </option>
                   </select>
+                  <div *ngIf="submitted && f['idJefaturaClienteSolicitante'].invalid" class="invalid-feedback">
+                    Debe seleccionar una jefatura cliente
+                  </div>
                 </div>
 
                 <!-- Analista Cliente -->
                 <div class="form-group mb-4">
-                  <label class="form-label fw-medium">Analista Cliente</label>
-                  <select class="form-select" formControlName="idAnalistaClienteSolicitante">
-                    <option [ngValue]="null">-- No asignado --</option>
+                  <label class="form-label fw-medium">
+                    Analista Cliente <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" formControlName="idAnalistaClienteSolicitante"
+                          [class.is-invalid]="submitted && f['idAnalistaClienteSolicitante'].invalid">
+                    <option [ngValue]="null">-- Seleccione analista --</option>
                     <option *ngFor="let a of analistasCliente" [ngValue]="a.id">
                       {{ a.label }}
                     </option>
                   </select>
+                  <div *ngIf="submitted && f['idAnalistaClienteSolicitante'].invalid" class="invalid-feedback">
+                    Debe seleccionar un analista cliente
+                  </div>
                 </div>
 
                 <!-- Coordinador TI/CW -->
                 <div class="form-group mb-4">
-                  <label class="form-label fw-medium">Coordinador TI/CW</label>
-                  <select class="form-select" formControlName="idCoordinadorTiCw">
-                    <option [ngValue]="null">-- No asignado --</option>
+                  <label class="form-label fw-medium">
+                    Coordinador TI/CW <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" formControlName="idCoordinadorTiCw"
+                          [class.is-invalid]="submitted && f['idCoordinadorTiCw'].invalid">
+                    <option [ngValue]="null">-- Seleccione coordinador --</option>
                     <option *ngFor="let c of coordinadoresTiCw" [ngValue]="c.id">
                       {{ c.label }}
                     </option>
                   </select>
+                  <div *ngIf="submitted && f['idCoordinadorTiCw'].invalid" class="invalid-feedback">
+                    Debe seleccionar un coordinador TI/CW
+                  </div>
                 </div>
               </div>
 
@@ -343,46 +361,70 @@
 
                 <!-- Jefatura Responsable -->
                 <div class="form-group mb-4">
-                  <label class="form-label fw-medium">Jefatura Responsable</label>
-                  <select class="form-select" formControlName="idJefaturaResponsable">
-                    <option [ngValue]="null">-- No asignado --</option>
+                  <label class="form-label fw-medium">
+                    Jefatura Responsable <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" formControlName="idJefaturaResponsable"
+                          [class.is-invalid]="submitted && f['idJefaturaResponsable'].invalid">
+                    <option [ngValue]="null">-- Seleccione jefatura --</option>
                     <option *ngFor="let j of jefaturasResponsable" [ngValue]="j.id">
                       {{ j.label }}
                     </option>
                   </select>
+                  <div *ngIf="submitted && f['idJefaturaResponsable'].invalid" class="invalid-feedback">
+                    Debe seleccionar una jefatura responsable
+                  </div>
                 </div>
 
                 <!-- Liquidador -->
                 <div class="form-group mb-4">
-                  <label class="form-label fw-medium">Liquidador</label>
-                  <select class="form-select" formControlName="idLiquidador">
-                    <option [ngValue]="null">-- No asignado --</option>
+                  <label class="form-label fw-medium">
+                    Liquidador <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" formControlName="idLiquidador"
+                          [class.is-invalid]="submitted && f['idLiquidador'].invalid">
+                    <option [ngValue]="null">-- Seleccione liquidador --</option>
                     <option *ngFor="let l of liquidadores" [ngValue]="l.id">
                       {{ l.label }}
                     </option>
                   </select>
+                  <div *ngIf="submitted && f['idLiquidador'].invalid" class="invalid-feedback">
+                    Debe seleccionar un liquidador
+                  </div>
                 </div>
 
                 <!-- Ejecutante -->
                 <div class="form-group mb-4">
-                  <label class="form-label fw-medium">Ejecutante</label>
-                  <select class="form-select" formControlName="idEjecutante">
-                    <option [ngValue]="null">-- No asignado --</option>
+                  <label class="form-label fw-medium">
+                    Ejecutante <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" formControlName="idEjecutante"
+                          [class.is-invalid]="submitted && f['idEjecutante'].invalid">
+                    <option [ngValue]="null">-- Seleccione ejecutante --</option>
                     <option *ngFor="let e of ejecutantes" [ngValue]="e.id">
                       {{ e.label }}
                     </option>
                   </select>
+                  <div *ngIf="submitted && f['idEjecutante'].invalid" class="invalid-feedback">
+                    Debe seleccionar un ejecutante
+                  </div>
                 </div>
 
                 <!-- Analista Contable -->
                 <div class="form-group mb-4">
-                  <label class="form-label fw-medium">Analista Contable</label>
-                  <select class="form-select" formControlName="idAnalistaContable">
-                    <option [ngValue]="null">-- No asignado --</option>
+                  <label class="form-label fw-medium">
+                    Analista Contable <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" formControlName="idAnalistaContable"
+                          [class.is-invalid]="submitted && f['idAnalistaContable'].invalid">
+                    <option [ngValue]="null">-- Seleccione analista --</option>
                     <option *ngFor="let a of analistasContable" [ngValue]="a.id">
                       {{ a.label }}
                     </option>
                   </select>
+                  <div *ngIf="submitted && f['idAnalistaContable'].invalid" class="invalid-feedback">
+                    Debe seleccionar un analista contable
+                  </div>
                 </div>
               </div>
             </div>
@@ -391,12 +433,12 @@
             <div class="step-actions mt-5 pt-4 border-top">
               <div class="d-flex justify-content-between">
                 <button type="button" class="btn btn-outline-secondary btn-lg px-4"
-                        (click)="currentStep = 1">
+                        (click)="cambiarPaso(1)">
                   <i class="bi bi-arrow-left me-2"></i>
                   Regresar
                 </button>
                 <button type="button" class="btn btn-primary btn-lg px-5"
-                        (click)="currentStep = 3">
+                        (click)="cambiarPaso(3)">
                   Continuar
                   <i class="bi bi-arrow-right ms-2"></i>
                 </button>
@@ -467,7 +509,7 @@
                         </div>
                         <div class="mb-3">
                           <small class="text-muted d-block mb-1">OT Anterior</small>
-                          <p class="fw-medium mb-0">{{ form.value.idOtsAnterior || 'No especificada' }}</p>
+                          <p class="fw-medium mb-0">{{ form.value.idOtsAnterior || 'No especificada (opcional)' }}</p>
                         </div>
                       </div>
                     </div>
@@ -495,43 +537,43 @@
                     <div class="mb-3">
                       <small class="text-muted d-block mb-1">Jefatura Cliente</small>
                       <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('jefaturaCliente') || 'No asignado' }}
+                        {{ getResponsableNombre('jefaturaCliente') || '—' }}
                       </p>
                     </div>
                     <div class="mb-3">
                       <small class="text-muted d-block mb-1">Analista Cliente</small>
                       <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('analistaCliente') || 'No asignado' }}
+                        {{ getResponsableNombre('analistaCliente') || '—' }}
                       </p>
                     </div>
                     <div class="mb-3">
                       <small class="text-muted d-block mb-1">Coordinador TI/CW</small>
                       <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('coordinadorTiCw') || 'No asignado' }}
+                        {{ getResponsableNombre('coordinadorTiCw') || '—' }}
                       </p>
                     </div>
                     <div class="mb-3">
                       <small class="text-muted d-block mb-1">Jefatura Responsable</small>
                       <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('jefaturaResponsable') || 'No asignado' }}
+                        {{ getResponsableNombre('jefaturaResponsable') || '—' }}
                       </p>
                     </div>
                     <div class="mb-3">
                       <small class="text-muted d-block mb-1">Liquidador</small>
                       <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('liquidador') || 'No asignado' }}
+                        {{ getResponsableNombre('liquidador') || '—' }}
                       </p>
                     </div>
                     <div class="mb-3">
                       <small class="text-muted d-block mb-1">Ejecutante</small>
                       <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('ejecutante') || 'No asignado' }}
+                        {{ getResponsableNombre('ejecutante') || '—' }}
                       </p>
                     </div>
                     <div class="mb-3">
                       <small class="text-muted d-block mb-1">Analista Contable</small>
                       <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('analistaContable') || 'No asignado' }}
+                        {{ getResponsableNombre('analistaContable') || '—' }}
                       </p>
                     </div>
                   </div>
@@ -543,7 +585,7 @@
             <div class="step-actions mt-5 pt-4 border-top">
               <div class="d-flex justify-content-between">
                 <button type="button" class="btn btn-outline-secondary btn-lg px-4"
-                        (click)="currentStep = 2">
+                        (click)="cambiarPaso(2)">
                   <i class="bi bi-arrow-left me-2"></i>
                   Regresar
                 </button>
@@ -575,8 +617,8 @@
     <!-- Footer -->
     <div class="form-footer bg-light border-top p-3 text-center text-muted small">
       <i class="bi bi-shield-lock me-1"></i>
-      Todos los datos están protegidos • 
-      <span class="text-danger">*</span> Campos obligatorios
+      <span class="text-danger">*</span> Todos los campos son obligatorios • 
+      Único campo opcional: OT Anterior
     </div>
   </ng-container>
 </div>
