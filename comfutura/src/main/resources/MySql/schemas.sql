@@ -17,7 +17,9 @@ USE comfutura;
 CREATE TABLE empresa (
                          id_empresa INT AUTO_INCREMENT PRIMARY KEY,
                          nombre VARCHAR(100) NOT NULL,
-                         activo TINYINT(1) DEFAULT 1
+                         ruc VARCHAR(11) NOT NULL UNIQUE,
+                         direccion VARCHAR(255),
+                         activo TINYINT(1) NOT NULL DEFAULT 1
 );
 
 CREATE TABLE cliente (

@@ -3,13 +3,35 @@
 -- Orden estricto para evitar errores de FK
 -- =====================================================
 
--- 1. Empresas
-INSERT INTO empresa (nombre) VALUES
-                                 ('COMFUTURA'),
-                                 ('GAB'),
-                                 ('ACAPA'),
-                                 ('EXTERNO'),
-                                 ('SUDCOM');
+INSERT INTO comfutura.empresa (id_empresa, nombre, ruc, direccion, activo) VALUES
+                                                                               (
+                                                                                   1,
+                                                                                   'COMFUTURA',
+                                                                                   '20516285517',
+                                                                                   'Dirección Legal: Cal. Hector Arellano Nro. 125, Urbanización México, Distrito: La Victoria, Departamento: Lima, Perú',
+                                                                                   1
+                                                                               ),
+                                                                               (
+                                                                                   2,
+                                                                                   'GAB',
+                                                                                   '20609573164',
+                                                                                   'Dirección Legal: Av. Nicolás Arriola Nro. 848, Urbanización Santa Catalina, Distrito: La Victoria, Departamento: Lima, Perú',
+                                                                                   1
+                                                                               ),
+                                                                               (
+                                                                                   3,
+                                                                                   'ACAPA',
+                                                                                   '20574613818',
+                                                                                   'Dirección Legal: Cal. Hector Arellano Nro. 125 (a una cuadra del Mercado La Pólvora), Distrito: La Victoria, Departamento: Lima, Perú',
+                                                                                   1
+                                                                               ),
+                                                                               (
+                                                                                   4,
+                                                                                   'SUDCOM',
+                                                                                   '20603078986',
+                                                                                   'Dirección Legal: Av. Brasil Nro. 3825 Dpto. 1801, Distrito: Magdalena del Mar, Departamento: Lima, Perú',
+                                                                                   1
+                                                                               );
 
 -- 2. Clientes
 INSERT INTO cliente (razon_social, ruc) VALUES
