@@ -7,6 +7,7 @@
 INSERT INTO empresa (nombre) VALUES
                                  ('COMFUTURA'),
                                  ('GAB'),
+                                 ('ACAPA'),
                                  ('SUDCOM');
 
 -- 2. Clientes
