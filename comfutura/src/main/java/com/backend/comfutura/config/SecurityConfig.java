@@ -47,6 +47,8 @@ public class SecurityConfig {
 
                                 "/api/ots/**",
                                 "/api/excel/**",
+                                "/api/usuarios/**",
+                                "/api/trabajadores/**",
                                 "/api/analista-cliente-solicitante/**",
                                 "/api/jefatura-cliente-solicitante/**",
                                 "/api/empresas/**",

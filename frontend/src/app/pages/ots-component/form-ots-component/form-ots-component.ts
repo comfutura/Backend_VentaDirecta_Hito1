@@ -299,7 +299,7 @@ export class FormOtsComponent implements OnInit {
     });
   }
 
-private actualizarDescripcion(): void {
+ private actualizarDescripcion(): void {
   if (this.isEditMode) return;
 
   const v = this.form.getRawValue();
@@ -308,27 +308,22 @@ private actualizarDescripcion(): void {
   const area     = this.areas.find(a => a.id === Number(v.idArea))?.label || '';
   const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
 
-  const toSlug = (str: string) =>
+  const normalize = (str: string) =>
     str
-      .toUpperCase()
       .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^A-Z0-9_]/g, '')
-      .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '');
+      .replace(/[^\w\s]/g, '')   // quita símbolos raros, mantiene espacios
+      .replace(/\s+/g, ' ');     // normaliza múltiples espacios
 
   const partes = [
-    toSlug(proyecto),
-    toSlug(area),
-    v.idSite ? String(v.idSite) : '',
-    toSlug(site)
+    normalize(proyecto),
+    normalize(area),
+    normalize(site)
   ].filter(Boolean);
 
-  const desc = partes.join('_') || 'OT_SIN_DESCRIPCION_AUTOMATICA';
+  const desc = partes.join('_') || 'OT SIN DESCRIPCION AUTOMATICA';
 
   this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
 }
-
 
 
   onSubmit(): void {
