@@ -20,6 +20,7 @@ public class ExcelImportDTO {
     private String proyecto;                   // Obligatorio
     private String fase;                       // Obligatorio
     private String site;                       // Obligatorio
+    private String siteDescripcion;                       // Obligatorio
     private String region;                     // Obligatorio
     private String estado = "ASIGNACION";      // Obligatorio, siempre ASIGNACION
 

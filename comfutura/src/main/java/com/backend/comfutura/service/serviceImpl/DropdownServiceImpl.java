@@ -79,6 +79,17 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
     @Override
+    public List<DropdownDTO> getSiteDescriptions() {
+        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()
+                .stream()
+                .map(s -> new DropdownDTO(
+                        s.getIdSite(),           // id sigue siendo útil
+                        s.getDescripcion(),      // value = descripción (lo que se guarda/selecciona)
+                        s.getDescripcion()       // label = descripción (lo que ve el usuario)
+                ))
+                .collect(Collectors.toList());
+    }
+    @Override
     public List<DropdownDTO> getAreasByCliente(Integer idCliente) {
         // Asumiendo que tienes un método en AreaRepository que filtra por cliente
         return areaRepository.findByClienteIdAndActivoTrue(idCliente)

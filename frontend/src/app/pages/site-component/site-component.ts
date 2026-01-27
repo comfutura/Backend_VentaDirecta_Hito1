@@ -92,7 +92,7 @@ export class SiteComponent implements OnInit, OnDestroy {
         this.errorMessage = 'Error al cargar los sitios. Por favor, intente nuevamente.';
         console.error('Error cargando sitios:', err);
         this.isTableLoading = false;
-        
+
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -105,7 +105,7 @@ export class SiteComponent implements OnInit, OnDestroy {
 
   applyFilter(): void {
     const term = this.searchDescripcion.toLowerCase().trim();
-    
+
     if (!term) {
       this.filteredSites = [...this.sites];
       return;
@@ -134,10 +134,10 @@ export class SiteComponent implements OnInit, OnDestroy {
   openCreateModal(): void {
     this.isEditMode = false;
     this.formSubmitted = false;
-    this.currentSite = { 
-      codigoSitio: '', 
-      descripcion: '', 
-      activo: true 
+    this.currentSite = {
+      codigoSitio: '',
+      descripcion: '',
+      activo: true
     };
     this.showModal = true;
     this.errorMessage = '';
@@ -154,15 +154,7 @@ export class SiteComponent implements OnInit, OnDestroy {
   saveSite(): void {
     this.formSubmitted = true;
 
-    if (!this.currentSite.codigoSitio.trim()) {
-      this.errorMessage = 'El código de sitio es obligatorio';
-      return;
-    }
 
-    if (this.currentSite.codigoSitio.length > 20) {
-      this.errorMessage = 'El código no puede exceder los 20 caracteres';
-      return;
-    }
 
     if (this.currentSite.descripcion && this.currentSite.descripcion.length > 150) {
       this.errorMessage = 'La descripción no puede exceder los 150 caracteres';
@@ -175,18 +167,18 @@ export class SiteComponent implements OnInit, OnDestroy {
     this.siteService.guardar(this.currentSite).subscribe({
       next: () => {
         this.showModal = false;
-        
+
         Swal.fire({
           icon: 'success',
           title: '¡Guardado exitoso!',
-          text: this.isEditMode 
+          text: this.isEditMode
             ? 'El sitio ha sido actualizado correctamente.'
             : 'El nuevo sitio ha sido creado correctamente.',
           timer: 2000,
           showConfirmButton: false,
           timerProgressBar: true
         });
-        
+
         this.loadSites(this.currentPage);
         this.isLoading = false;
       },
@@ -195,7 +187,7 @@ export class SiteComponent implements OnInit, OnDestroy {
         this.errorMessage = errorMessage;
         console.error('Error guardando sitio:', err);
         this.isLoading = false;
-        
+
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -220,7 +212,7 @@ export class SiteComponent implements OnInit, OnDestroy {
 
     const accion = site.activo ? 'desactivar' : 'activar';
     const titulo = site.activo ? 'Desactivar Sitio' : 'Activar Sitio';
-    const texto = site.activo 
+    const texto = site.activo
       ? '¿Está seguro de que desea desactivar este sitio? No estará disponible para nuevas asignaciones.'
       : '¿Está seguro de que desea activar este sitio? Estará disponible para nuevas asignaciones.';
 
@@ -236,14 +228,14 @@ export class SiteComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed) {
         this.isLoading = true;
-        
+
         // Aseguramos que idSite es number
         const siteId = site.idSite as number;
-        
+
         this.siteService.toggle(siteId).subscribe({
           next: () => {
             site.activo = !site.activo;
-            
+
             Swal.fire({
               icon: 'success',
               title: '¡Estado actualizado!',
@@ -251,7 +243,7 @@ export class SiteComponent implements OnInit, OnDestroy {
               timer: 1500,
               showConfirmButton: false
             });
-            
+
             this.isLoading = false;
           },
           error: (err) => {
@@ -259,7 +251,7 @@ export class SiteComponent implements OnInit, OnDestroy {
             this.errorMessage = errorMessage;
             console.error(`Error ${accion}do sitio:`, err);
             this.isLoading = false;
-            
+
             Swal.fire({
               icon: 'error',
               title: 'Error',
@@ -300,9 +292,9 @@ export class SiteComponent implements OnInit, OnDestroy {
       this.totalPages - maxVisible
     ));
     const end = Math.min(start + maxVisible, this.totalPages);
-    
+
     this.visiblePages = Array.from(
-      { length: end - start }, 
+      { length: end - start },
       (_, i) => start + i
     );
   }
