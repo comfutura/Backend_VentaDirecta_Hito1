@@ -17,7 +17,15 @@ public interface OtsRepository extends JpaRepository<Ots, Integer>, JpaSpecifica
 
     Page<Ots> findByActivo(Boolean activo, Pageable pageable);
 
-    Optional<Ots> findTopByOrderByOtDesc();
+    @Query("""
+    SELECT o FROM Ots o
+    WHERE o.ot BETWEEN :inicio AND :fin
+    ORDER BY o.ot DESC
+""")
+    Optional<Ots> findUltimaOtDelAnio(
+            @Param("inicio") Integer inicio,
+            @Param("fin") Integer fin
+    );
 
     @Query("SELECT o FROM Ots o " +
             "LEFT JOIN FETCH o.cliente " +
