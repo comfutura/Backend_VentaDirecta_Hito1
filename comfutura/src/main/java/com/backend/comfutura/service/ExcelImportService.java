@@ -125,24 +125,24 @@ public class ExcelImportService {
             CreationHelper createHelper = workbook.getCreationHelper();
             fechaStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy"));
 
-            // ENCABEZADOS
             String[] headers = {
-                    "fechaApertura",           // Obligatorio
-                    "cliente",                 // Obligatorio - Dropdown
-                    "area",                    // Obligatorio - Dropdown
-                    "proyecto",                // Obligatorio - Dropdown
-                    "fase",                    // Obligatorio - Dropdown
-                    "site",                    // Obligatorio - Dropdown
-                    "region",                  // Obligatorio - Dropdown
-                    "estado",                  // Obligatorio - Dropdown (siempre ASIGNACION)
-                    "otAnterior",              // Opcional - NO dropdown
-                    "JefaturaClienteSolicitante", // Obligatorio - Dropdown
-                    "AnalistaClienteSolicitante", // Obligatorio - Dropdown
-                    "CoordinadorTiCw",         // Obligatorio - Dropdown
-                    "JefaturaResponsable",     // Obligatorio - Dropdown
-                    "Liquidador",              // Obligatorio - Dropdown
-                    "Ejecutante",              // Obligatorio - Dropdown
-                    "AnalistaContable"         // Obligatorio - Dropdown
+                    "fechaApertura",                  // 0
+                    "cliente",                        // 1
+                    "area",                           // 2
+                    "proyecto",                       // 3
+                    "fase",                           // 4
+                    "site",                           // 5  → ahora OPCIONAL (código)
+                    "siteDescripcion",                // 6  → nuevo OBLIGATORIO
+                    "region",                         // 7
+                    "estado",                         // 8
+                    "otAnterior",                     // 9
+                    "JefaturaClienteSolicitante",     // 10
+                    "AnalistaClienteSolicitante",     // 11
+                    "CoordinadorTiCw",                // 12
+                    "JefaturaResponsable",            // 13
+                    "Liquidador",                     // 14
+                    "Ejecutante",                     // 15
+                    "AnalistaContable"                // 16
             };
 
             // Crear fila de encabezados
@@ -205,16 +205,17 @@ public class ExcelImportService {
                     {2, "Área", dropdownService.getAreas()},
                     {3, "Proyecto", dropdownService.getProyectos()},
                     {4, "Fase", dropdownService.getFases()},
-                    {5, "Site", dropdownService.getSites()},
-                    {6, "Región", dropdownService.getRegiones()},
-                    {7, "Estado", null}, // Especial - manejado separadamente
-                    {9, "Jefatura Cliente", dropdownService.getJefaturasClienteSolicitante()},
-                    {10, "Analista Cliente", dropdownService.getAnalistasClienteSolicitante()},
-                    {11, "Coordinador Ti CW", dropdownService.getCoordinadoresTiCw()},
-                    {12, "Jefatura Responsable", dropdownService.getJefaturasResponsable()},
-                    {13, "Liquidador", dropdownService.getLiquidador()},
-                    {14, "Ejecutante", dropdownService.getEjecutantes()},
-                    {15, "Analista Contable", dropdownService.getAnalistasContable()}
+                    {5, "Site (código)", dropdownService.getSites()},           // opcional
+                    {6, "Site Descripción (obligatorio)", dropdownService.getSiteDescriptions()},
+                    {7, "Región", dropdownService.getRegiones()},
+                    {8, "Estado", null},
+                    {10, "Jefatura Cliente", dropdownService.getJefaturasClienteSolicitante()},
+                    {11, "Analista Cliente", dropdownService.getAnalistasClienteSolicitante()},
+                    {12, "Coordinador Ti CW", dropdownService.getCoordinadoresTiCw()},
+                    {13, "Jefatura Responsable", dropdownService.getJefaturasResponsable()},
+                    {14, "Liquidador", dropdownService.getLiquidador()},
+                    {15, "Ejecutante", dropdownService.getEjecutantes()},
+                    {16, "Analista Contable", dropdownService.getAnalistasContable()}
             };
 
             for (Object[] config : configs) {
@@ -431,7 +432,10 @@ public class ExcelImportService {
         if (!clientes.isEmpty()) {
             ejemploRow.createCell(1).setCellValue(clientes.get(0).label());
         }
-
+        List<DropdownDTO> sites = dropdownService.getSites();
+        if (!sites.isEmpty()) {
+            ejemploRow.createCell(6).setCellValue(sites.get(0).label());  // descripción
+        }
         // Área
         List<DropdownDTO> areas = dropdownService.getAreas();
         if (!areas.isEmpty()) {
@@ -450,58 +454,54 @@ public class ExcelImportService {
             ejemploRow.createCell(4).setCellValue(fases.get(0).label());
         }
 
-        // Site
-        List<DropdownDTO> sites = dropdownService.getSites();
-        if (!sites.isEmpty()) {
-            ejemploRow.createCell(5).setCellValue(sites.get(0).label());
-        }
+
 
         // Región
         List<DropdownDTO> regiones = dropdownService.getRegiones();
         if (!regiones.isEmpty()) {
-            ejemploRow.createCell(6).setCellValue(regiones.get(0).label());
+            ejemploRow.createCell(7).setCellValue(regiones.get(0).label());
         }
 
         // Estado - siempre ASIGNACION
-        ejemploRow.createCell(7).setCellValue("ASIGNACION");
+        ejemploRow.createCell(8).setCellValue("ASIGNACION");
 
         // otAnterior - vacío (opcional)
-        ejemploRow.createCell(8).setCellValue("");
+        ejemploRow.createCell(9).setCellValue("");
 
         // Responsables
         List<DropdownDTO> jefaturasCliente = dropdownService.getJefaturasClienteSolicitante();
         if (!jefaturasCliente.isEmpty()) {
-            ejemploRow.createCell(9).setCellValue(jefaturasCliente.get(0).label());
+            ejemploRow.createCell(10).setCellValue(jefaturasCliente.get(0).label());
         }
 
         List<DropdownDTO> analistasCliente = dropdownService.getAnalistasClienteSolicitante();
         if (!analistasCliente.isEmpty()) {
-            ejemploRow.createCell(10).setCellValue(analistasCliente.get(0).label());
+            ejemploRow.createCell(11).setCellValue(analistasCliente.get(0).label());
         }
 
         List<DropdownDTO> coordinadores = dropdownService.getCoordinadoresTiCw();
         if (!coordinadores.isEmpty()) {
-            ejemploRow.createCell(11).setCellValue(coordinadores.get(0).label());
+            ejemploRow.createCell(12).setCellValue(coordinadores.get(0).label());
         }
 
         List<DropdownDTO> jefaturasResponsable = dropdownService.getJefaturasResponsable();
         if (!jefaturasResponsable.isEmpty()) {
-            ejemploRow.createCell(12).setCellValue(jefaturasResponsable.get(0).label());
+            ejemploRow.createCell(13).setCellValue(jefaturasResponsable.get(0).label());
         }
 
         List<DropdownDTO> liquidador = dropdownService.getLiquidador();
         if (!liquidador.isEmpty()) {
-            ejemploRow.createCell(13).setCellValue(liquidador.get(0).label());
+            ejemploRow.createCell(14).setCellValue(liquidador.get(0).label());
         }
 
         List<DropdownDTO> ejecutantes = dropdownService.getEjecutantes();
         if (!ejecutantes.isEmpty()) {
-            ejemploRow.createCell(14).setCellValue(ejecutantes.get(0).label());
+            ejemploRow.createCell(15).setCellValue(ejecutantes.get(0).label());
         }
 
         List<DropdownDTO> analistasContable = dropdownService.getAnalistasContable();
         if (!analistasContable.isEmpty()) {
-            ejemploRow.createCell(15).setCellValue(analistasContable.get(0).label());
+            ejemploRow.createCell(16).setCellValue(analistasContable.get(0).label());
         }
     }
 
@@ -648,7 +648,10 @@ public class ExcelImportService {
             if (columnIndex.containsKey("site")) {
                 dto.setSite(getStringCellValue(row, columnIndex.get("site")));
             }
-
+// NUEVO: SITE DESCRIPCIÓN (obligatorio)
+            if (columnIndex.containsKey("sitedescripcion")) {
+                dto.setSiteDescripcion(getStringCellValue(row, columnIndex.get("sitedescripcion")));
+            }
             // REGIÓN
             if (columnIndex.containsKey("region")) {
                 dto.setRegion(getStringCellValue(row, columnIndex.get("region")));
@@ -743,8 +746,11 @@ public class ExcelImportService {
             errores.add("Fase es obligatoria y debe existir en el sistema");
         }
 
-        if (dto.getSite() == null || dto.getSite().trim().isEmpty() || !existeSite(dto.getSite())) {
-            errores.add("Site es obligatorio y debe existir en el sistema");
+        // NUEVA validación obligatoria
+        if (dto.getSiteDescripcion() == null || dto.getSiteDescripcion().trim().isEmpty()) {
+            errores.add("La descripción del sitio es obligatoria");
+        } else if (!siteRepository.existsByDescripcion(dto.getSiteDescripcion().trim())) {
+            errores.add("La descripción del sitio '" + dto.getSiteDescripcion().trim() + "' no existe en el sistema");
         }
 
         if (dto.getRegion() == null || dto.getRegion().trim().isEmpty() || !existeRegion(dto.getRegion())) {
@@ -753,10 +759,6 @@ public class ExcelImportService {
 
         if (dto.getEstado() == null || !"ASIGNACION".equalsIgnoreCase(dto.getEstado().trim())) {
             errores.add("Estado debe ser siempre 'ASIGNACION'");
-        }
-
-        if (dto.getOtAnterior() != null && !existeOtAnterior(dto.getOtAnterior())) {
-            errores.add("OT anterior no existe");
         }
 
         if (!errores.isEmpty()) {
@@ -769,18 +771,29 @@ public class ExcelImportService {
         OtCreateRequest request = new OtCreateRequest();
         request.setFechaApertura(importDTO.getFechaApertura());
         request.setActivo(true);
-        Site sitio = siteRepository
-                .findByCodigoSitio(importDTO.getSite())
-                .orElseThrow(() -> new RuntimeException(
-                        "No se encontró el Site con código: " + importDTO.getSite()
-                ));
-        // Generar descripción automáticamente
+        // Opción recomendada: buscar por descripción (obligatorio)
+        String descSitio = importDTO.getSiteDescripcion();
+        Site sitio = siteRepository.findByDescripcion(descSitio.trim())
+                .orElseThrow(() -> new RuntimeException("No se encontró sitio con descripción: " + descSitio));
+
+// Si también viene código → validación adicional (opcional)
+        if (importDTO.getSite() != null && !importDTO.getSite().trim().isEmpty()) {
+            if (!importDTO.getSite().equals(sitio.getCodigoSitio())) {
+                throw new IllegalArgumentException(
+                        "El código de sitio indicado no coincide con la descripción proporcionada");
+            }
+        }
+
+// Usar el sitio encontrado
+        request.setIdSite(sitio.getIdSite());
+
+// Para la descripción automática (puedes seguir usando sitio.getDescripcion())
         String descripcion = String.format("%s_%s_%s_%s",
-                importDTO.getProyecto() != null ? normalizeForDescripcion(importDTO.getProyecto()) : "",
-                importDTO.getArea() != null ? normalizeForDescripcion(importDTO.getArea()) : "",
-                importDTO.getSite() != null ? normalizeForDescripcion(importDTO.getSite()) : "",
-                importDTO.getSite() != null ? normalizeForDescripcion(sitio.getDescripcion()) : ""
-        ).replace("__", "_").replace("__", "_");
+                normalizeForDescripcion(importDTO.getProyecto()),
+                normalizeForDescripcion(importDTO.getArea()),
+                normalizeForDescripcion(importDTO.getSiteDescripcion()),  // ← aquí usamos descripción
+                normalizeForDescripcion(sitio.getDescripcion())
+        ).replaceAll("_+", "_").replaceAll("^_|_$", "");
 
         if (descripcion.endsWith("_")) {
             descripcion = descripcion.substring(0, descripcion.length() - 1);

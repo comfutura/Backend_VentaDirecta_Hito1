@@ -10,5 +10,6 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
 
     List<Site> findByActivoTrueOrderByCodigoSitioAsc();
     Optional<Site> findByCodigoSitio(String codigoSitio);
-
+    boolean existsByDescripcion(String descripcion);
+    Optional<Site> findByDescripcion(String descripcion);
 }

@@ -16,10 +16,10 @@ public class Site {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idSite;
 
-    @Column(nullable = false, length = 150, name = "codigo_sitio")
-    private String codigoSitio;  // ← camelCase, sin guión bajo
+    @Column( length = 150, name = "codigo_sitio")
+    private String codigoSitio;
 
-    @Column(length = 255)
+    @Column(nullable = false,length = 255)
     private String descripcion;
 
     private Boolean activo = true;

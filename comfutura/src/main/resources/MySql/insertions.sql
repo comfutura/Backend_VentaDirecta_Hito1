@@ -508,6 +508,7 @@ INSERT INTO proyecto (nombre) VALUES
                                   ('OVERLAP'),
                                   ('RANCO'),
                                   ('ROLL OUT'),
+                                  ('ARELLANO'),
                                   ('TRONCAL');
 
 
@@ -529,6 +530,7 @@ INSERT INTO site (codigo_sitio, descripcion) VALUES
                                                  ('TJ1435', 'NAT_EL_HUARANCHAL'),
                                                  ('TL2410', 'AULAS _USS'),
                                                  ('TL0590', 'NAT_PARQUE_SANTIAGO'),
+                                                 ('COMFUTURA', 'COMFUTURA'),
                                                  ('TL5949', 'NAT_CASA_BLANCA_TUMAN'),
                                                  ('TL6477', 'NAT_AV_LAS_FLORES'),
                                                  ('TP0332', 'NAT_JR_D_MAITE'),
