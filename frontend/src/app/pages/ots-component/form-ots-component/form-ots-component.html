@@ -201,7 +201,7 @@
       <option [ngValue]="null">Seleccione site...</option>
 
       <option *ngFor="let s of sites" [ngValue]="s.id">
-        {{ s.label }} - {{ s.adicional || 'SIN DESCRIPCIÓN' }}
+        {{ s.label  }}   {{ s.adicional || 'SIN DESCRIPCIÓN' }}
       </option>
 
     </select>

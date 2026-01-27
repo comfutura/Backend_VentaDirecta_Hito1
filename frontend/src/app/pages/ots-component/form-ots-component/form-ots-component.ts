@@ -307,6 +307,7 @@ export class FormOtsComponent implements OnInit {
   const proyecto = this.proyectos.find(p => p.id === Number(v.idProyecto))?.label || '';
   const area     = this.areas.find(a => a.id === Number(v.idArea))?.label || '';
   const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
+  const sitex     = this.sites.find(s => s.id === Number(v.idSite))?.adicional || '';
 
   const normalize = (str: string) =>
     str
@@ -317,7 +318,8 @@ export class FormOtsComponent implements OnInit {
   const partes = [
     normalize(proyecto),
     normalize(area),
-    normalize(site)
+    normalize(site),
+    normalize(sitex)
   ].filter(Boolean);
 
   const desc = partes.join('_') || 'OT SIN DESCRIPCION AUTOMATICA';
