@@ -210,10 +210,14 @@ public class OtServiceImpl implements OtService {
     }
 
     private Ots createOt(OtCreateRequest req) {
-        Integer ultima = otsRepository.findTopByOrderByOtDesc()
-                .map(Ots::getOt)
-                .orElse(20250000);
-        Integer nuevoOt = ultima + 1;
+
+        int anioActual = LocalDate.now().getYear();
+
+        Integer ultimoOt = getUltimoOtCorrelativo();
+
+        int nuevoOt = (ultimoOt == null)
+                ? anioActual * 10000 + 1   // 20260001
+                : ultimoOt + 1;
 
         Integer userId = getCurrentTrabajadorId();
         Trabajador creador = trabajadorRepository.findById(userId)
@@ -235,6 +239,8 @@ public class OtServiceImpl implements OtService {
         setRelations(ots, req);
         return ots;
     }
+
+
 
     private void updateOt(Ots ots, OtCreateRequest req) {
         if (req.getDescripcion() != null) ots.setDescripcion(req.getDescripcion());
@@ -297,9 +303,18 @@ public class OtServiceImpl implements OtService {
 
     @Override
     public Integer getUltimoOtCorrelativo() {
-        Optional<Ots> ultimaOt = otsRepository.findTopByOrderByOtDesc();
-        return ultimaOt.map(Ots::getOt).orElse(null);
+
+        int anioActual = LocalDate.now().getYear();
+
+        int inicio = anioActual * 10000;       // 20260000
+        int fin    = anioActual * 10000 + 9999; // 20269999
+
+        return otsRepository.findUltimaOtDelAnio(inicio, fin)
+                .map(Ots::getOt)
+                .orElse(null);
     }
+
+
 
     @Override
     public Integer buscarIdPorOt(Integer ot) {
