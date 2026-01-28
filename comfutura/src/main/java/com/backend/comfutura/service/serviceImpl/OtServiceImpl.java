@@ -2,6 +2,7 @@ package com.backend.comfutura.service.serviceImpl;
 
 import com.backend.comfutura.Exceptions.ResourceNotFoundException;
 import com.backend.comfutura.config.security.CustomUserDetails;
+import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.request.OtCreateRequest;
 import com.backend.comfutura.dto.response.OtDetailResponse;
 import com.backend.comfutura.dto.response.OtFullResponse;
@@ -24,6 +25,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
@@ -43,10 +46,9 @@ public class OtServiceImpl implements OtService {
     private final AnalistaClienteSolicitanteRepository analistaClienteRepository;
     private final EstadoOtRepository estadoOtRepository;
 
-    // LISTADO OPTIMIZADO + FILTRO DE TEXTO
     @Override
     @Transactional(readOnly = true)
-    public Page<OtListDto> listarOts(String search, Pageable pageable) {
+    public PageResponseDTO<OtListDto> listarOts(String search, Pageable pageable) {
         Specification<Ots> spec = (root, query, cb) -> {
             if (search == null || search.trim().isEmpty()) {
                 return cb.conjunction();
@@ -65,7 +67,23 @@ public class OtServiceImpl implements OtService {
             );
         };
 
-        return otsRepository.findAll(spec, pageable).map(this::toOtListDto);
+        // Obtener la página de Spring Data
+        Page<Ots> page = otsRepository.findAll(spec, pageable);
+
+        // Convertir a PageResponseDTO
+        List<OtListDto> content = page.getContent().stream()
+                .map(this::toOtListDto)
+                .collect(Collectors.toList());
+
+        return new PageResponseDTO<>(
+                content,
+                page.getNumber(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast(),
+                page.getSize()
+        );
     }
 
     private OtListDto toOtListDto(Ots ots) {
@@ -186,6 +204,7 @@ public class OtServiceImpl implements OtService {
                 .idAnalistaContable(ofNullable(ots.getAnalistaContable()).map(Trabajador::getIdTrabajador).orElse(null))
                 .activo(ots.getActivo())
                 .fechaCreacion(ots.getFechaCreacion())
+                .idEstadoOt(ots.getEstadoOt().getIdEstadoOt())
                 .build();
     }
 
@@ -208,10 +227,14 @@ public class OtServiceImpl implements OtService {
     }
 
     private Ots createOt(OtCreateRequest req) {
-        Integer ultima = otsRepository.findTopByOrderByOtDesc()
-                .map(Ots::getOt)
-                .orElse(20250000);
-        Integer nuevoOt = ultima + 1;
+
+        int anioActual = LocalDate.now().getYear();
+
+        Integer ultimoOt = getUltimoOtCorrelativo();
+
+        int nuevoOt = (ultimoOt == null)
+                ? anioActual * 10000 + 1   // 20260001
+                : ultimoOt + 1;
 
         Integer userId = getCurrentTrabajadorId();
         Trabajador creador = trabajadorRepository.findById(userId)
@@ -234,11 +257,14 @@ public class OtServiceImpl implements OtService {
         return ots;
     }
 
+
+
     private void updateOt(Ots ots, OtCreateRequest req) {
         if (req.getDescripcion() != null) ots.setDescripcion(req.getDescripcion());
         if (req.getFechaApertura() != null) ots.setFechaApertura(req.getFechaApertura());
         if (req.getIdOtsAnterior() != null) ots.setIdOtsAnterior(req.getIdOtsAnterior());
-
+        if (req.getIdEstadoOt() != null)
+            ots.setEstadoOt(find(estadoOtRepository, req.getIdEstadoOt(), "EstadoOt"));
         setRelations(ots, req);
     }
 
@@ -255,6 +281,7 @@ public class OtServiceImpl implements OtService {
             ots.setSite(find(siteRepository, req.getIdSite(), "Site"));
         if (req.getIdRegion() != null)
             ots.setRegion(find(regionRepository, req.getIdRegion(), "Región"));
+
 
         ots.setJefaturaClienteSolicitante(
                 req.getIdJefaturaClienteSolicitante() != null ?
@@ -290,6 +317,54 @@ public class OtServiceImpl implements OtService {
         ot.setActivo(!ot.getActivo());
         otsRepository.save(ot);
     }
+
+    @Override
+    public Integer getUltimoOtCorrelativo() {
+        try {
+            int anioActual = LocalDate.now().getYear();
+
+            // Opción A: Por rango numérico
+            int inicio = anioActual * 10000;       // 20250000
+            int fin    = anioActual * 10000 + 9999; // 20259999
+
+            Optional<Integer> ultimoOt = otsRepository.findMaxOtInRange(inicio, fin);
+
+            if (ultimoOt.isPresent()) {
+                return ultimoOt.get();
+            }
+
+            // Opción B: Por año de fecha (alternativa)
+            Optional<Integer> ultimoPorFecha = otsRepository.findMaxOtByYear(anioActual);
+            if (ultimoPorFecha.isPresent()) {
+                return ultimoPorFecha.get();
+            }
+
+            // Si no hay OTs para el año actual, generar número base
+            Integer nuevoOt = inicio ; // 20250001
+            return nuevoOt;
+
+        } catch (Exception e) {
+
+            // Valor por defecto seguro
+            int anioActual = LocalDate.now().getYear();
+            return (anioActual * 10000) + 1;
+        }
+    }
+
+
+
+    @Override
+    public Integer buscarIdPorOt(Integer ot) {
+        return otsRepository.findByOt(ot)
+                .map(Ots::getIdOts)
+                .orElse(null);
+    }
+
+    @Override
+    public boolean existeOt(Integer ot) {
+        return otsRepository.findByOt(ot).isPresent();
+    }
+
     @Transactional
     public List<OtDetailResponse> saveOtsMasivo(List<OtCreateRequest> requests) {
         List<OtDetailResponse> responses = new ArrayList<>();

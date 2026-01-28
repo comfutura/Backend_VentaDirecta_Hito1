@@ -26,11 +26,11 @@ public class DropdownServiceImpl implements DropdownService {
     private final ProveedorRepository proveedorRepository;
     private final CargoRepository cargoRepository;
     private final EmpresaRepository empresaRepository;
+    private final EstadoOtRepository estadoOtRepository;
 
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteSolicitanteRepository;
-    private final EstadoOtRepository estadoOtRepository; // <-- AGREGAR este repositorio
 
     // ────────────────────────────────────────────────────────
     // Métodos existentes (sin cambios)
@@ -60,6 +60,7 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
+
     @Override
     public List<DropdownDTO> getEmpresas() {
         return empresaRepository.findByActivoTrueOrderByNombreAsc()
@@ -70,12 +71,22 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
-
     @Override
     public List<DropdownDTO> getEstadosOt() {
         return estadoOtRepository.findByActivoTrueOrderByDescripcionAsc()
                 .stream()
                 .map(e -> new DropdownDTO(e.getIdEstadoOt(), e.getDescripcion()))
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<DropdownDTO> getSiteDescriptions() {
+        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()
+                .stream()
+                .map(s -> new DropdownDTO(
+                        s.getIdSite(),           // id sigue siendo útil
+                        s.getDescripcion(),      // value = descripción (lo que se guarda/selecciona)
+                        s.getDescripcion()       // label = descripción (lo que ve el usuario)
+                ))
                 .collect(Collectors.toList());
     }
     @Override
@@ -173,6 +184,9 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
                 .collect(Collectors.toList());
     }
+
+
+
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
         return trabajadorRepository
@@ -185,10 +199,11 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
+    //CAMBIADO POR TODO
     @Override
     public List<DropdownDTO> getJefaturasResponsable() {
         return trabajadorRepository
-                .findActivosConCargoJefe()
+                .findAllByActivoTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -196,11 +211,11 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
-
+    //CAMBIADO POR TODO
     @Override
     public List<DropdownDTO> getLiquidador() {
         return trabajadorRepository
-                .findJefesDeCierre()
+                .findAllByActivoTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -212,7 +227,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getEjecutantes() {
         return trabajadorRepository
-                .findAll()
+                .findAllByActivoTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),

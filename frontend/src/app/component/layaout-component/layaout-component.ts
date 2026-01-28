@@ -101,6 +101,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
     return this.authService.currentUser?.username ?? 'Usuario';
   }
 
+    get nombreCompleto(): string {
+    return this.authService.currentUser?.nombreCompleto ?? 'nombre';
+  }
+
   get userInitial(): string {
     const name = this.authService.currentUser?.username;
     return name ? name.charAt(0).toUpperCase() : 'U';

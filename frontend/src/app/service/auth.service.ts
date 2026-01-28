@@ -19,6 +19,10 @@ export interface UserJwtDto {
   idUsuario: number;
   idTrabajador: number;
   username: string;
+  empresa: string;
+  cargo: string;
+  area: string;
+  nombreCompleto: string;
   activo: boolean;
   roles: string[];
   // Agrega aquí otros campos que vengan en tu JWT (ej: exp, iat, nombre, etc.)

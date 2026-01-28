@@ -12,6 +12,7 @@ public interface DropdownService {
     List<DropdownDTO> getProyectos();
     List<DropdownDTO> getFases();
     List<DropdownDTO> getSites();
+    List<DropdownDTO> getSiteDescriptions();
     List<DropdownDTO> getRegiones();
     List<DropdownDTO> getEstadosOt(); // <-- AGREGAR este método
     List<DropdownDTO> getOtsActivas();

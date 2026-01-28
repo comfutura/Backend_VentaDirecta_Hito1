@@ -1,5 +1,6 @@
 package com.backend.comfutura.controller;
 
+import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.request.OtCreateRequest;
 import com.backend.comfutura.dto.response.OtDetailResponse;
 import com.backend.comfutura.dto.response.OtFullResponse;
@@ -21,11 +22,11 @@ public class OtController {
     private final OtService otService;
 
     @GetMapping
-    public ResponseEntity<Page<OtListDto>> listar(
+    public ResponseEntity<PageResponseDTO<OtListDto>> listar(
             @RequestParam(required = false) String search,
             Pageable pageable) {
-        Page<OtListDto> page = otService.listarOts(search, pageable);
-        return ResponseEntity.ok(page);
+        PageResponseDTO<OtListDto> response = otService.listarOts(search, pageable);
+        return ResponseEntity.ok(response);
     }
 
 

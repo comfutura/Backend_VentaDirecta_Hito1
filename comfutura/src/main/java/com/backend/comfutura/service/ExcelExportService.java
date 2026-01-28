@@ -1,5 +1,6 @@
 package com.backend.comfutura.service;
 
+import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.response.ExcelOtExportDTO;
 import com.backend.comfutura.dto.response.OtDetailResponse;
 import com.backend.comfutura.dto.response.OtListDto;
@@ -61,7 +62,7 @@ public class ExcelExportService {
         }
     }
 
-    // Método para exportar todas las OTs
+    // Método para exportar todas las OTs (actualizado)
     public byte[] exportAllOtsToExcel() throws IOException {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -76,9 +77,9 @@ public class ExcelExportService {
 
             while (true) {
                 Pageable pageable = PageRequest.of(page, pageSize);
-                Page<OtListDto> otPage = otService.listarOts(null, pageable);
+                PageResponseDTO<OtListDto> otPage = otService.listarOts(null, pageable);
 
-                if (otPage.isEmpty()) {
+                if (otPage.getContent().isEmpty()) {
                     break;
                 }
 
@@ -92,7 +93,7 @@ public class ExcelExportService {
                     }
                 }
 
-                if (!otPage.hasNext()) {
+                if (otPage.isLast()) {
                     break;
                 }
 
@@ -111,7 +112,6 @@ public class ExcelExportService {
             return outputStream.toByteArray();
         }
     }
-
     // Método para exportar OTs filtradas
     public byte[] exportFilteredOts(String search, LocalDate fechaDesde,
                                     LocalDate fechaHasta, Boolean activo) throws IOException {

@@ -210,8 +210,8 @@ CREATE TABLE fase (
 );
 CREATE TABLE site (
                       id_site INT AUTO_INCREMENT PRIMARY KEY,
-                      codigo_sitio VARCHAR(150) NOT NULL,
-                      descripcion VARCHAR(255),
+                      codigo_sitio VARCHAR(150)  NULL,
+                      descripcion VARCHAR(255) not null,
                       activo TINYINT(1) DEFAULT 1
 );
 CREATE TABLE region (
@@ -258,14 +258,12 @@ CREATE TABLE ots (
                      fecha_apertura DATE NOT NULL,
                      id_jefatura_cliente_solicitante   INT DEFAULT NULL,
                      id_analista_cliente_solicitante   INT DEFAULT NULL,
-    -- 🔥 ROLES (TODOS SON TRABAJADORES)
                      id_coordinador_ti_cw    INT DEFAULT NULL,
                      id_jefatura_responsable INT DEFAULT NULL,
                      id_liquidador           INT DEFAULT NULL,
                      id_ejecutante           INT DEFAULT NULL,
                      id_analista_contable    INT DEFAULT NULL,
 
-                     dias_asignados INT DEFAULT 0,
                      id_trabajador int not null,
 
                      id_estado_ot INT not null,

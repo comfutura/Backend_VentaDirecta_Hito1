@@ -14,9 +14,18 @@
 
         <div class="col-md-6">
           <div class="d-flex justify-content-end align-items-center gap-2">
+            <!-- Botón de refrescar -->
+            <button class="btn btn-outline-light btn-lg px-4"
+                    (click)="refreshTable()"
+                    [disabled]="loading"
+                    [title]="'Refrescar tabla'">
+              <i class="bi bi-arrow-clockwise" [class.spin]="loading"></i>
+              <span class="d-none d-md-inline ms-2">Refrescar</span>
+            </button>
+
             <!-- Exportación dropdown -->
             <div class="dropdown" ngbDropdown>
-              <button class="btn btn-outline-secondary btn-lg px-4" ngbDropdownToggle>
+              <button class="btn btn-outline-light btn-lg px-4" ngbDropdownToggle>
                 <i class="bi bi-download me-2"></i>Exportar
               </button>
               <div class="dropdown-menu dropdown-menu-end shadow" ngbDropdownMenu>
@@ -47,27 +56,17 @@
 
                 <div class="dropdown-divider"></div>
 
-                <h6 class="dropdown-header text-muted">Plantillas y modelos</h6>
+                <h6 class="dropdown-header text-muted">Plantilla</h6>
 
                 <button class="dropdown-item" (click)="downloadImportTemplate()">
                   <i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>
                   Plantilla
                 </button>
-
-                <button class="dropdown-item" (click)="downloadDataModel()">
-                  <i class="bi bi-diagram-3 me-2 text-purple"></i>
-                  Modelo de datos
-                </button>
-
-                <button class="dropdown-item" (click)="downloadRelationsModel()">
-                  <i class="bi bi-shuffle me-2 text-indigo"></i>
-                  Modelo de relaciones
-                </button>
               </div>
             </div>
 
             <!-- Botón de importación -->
-            <button class="btn btn-outline-primary btn-lg px-4" (click)="openImportModal()">
+            <button class="btn btn-outline-light btn-lg px-4" (click)="openImportModal()">
               <i class="bi bi-upload me-2"></i>Importar
             </button>
 
@@ -79,12 +78,12 @@
         </div>
       </div>
 
-      <!-- Filtros -->
+      <!-- Filtros mejorados -->
       <div class="row">
         <div class="col-12">
           <div class="filters-card">
             <div class="row g-3">
-              <div class="col-md-6">
+              <div class="col-md-5 col-lg-6">
                 <div class="input-group input-group-lg">
                   <span class="input-group-text bg-white border-end-0">
                     <i class="bi bi-search text-muted"></i>
@@ -103,19 +102,17 @@
                 </div>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-4 col-lg-3">
                 <select class="form-select form-select-lg" [(ngModel)]="estadoFilter" (change)="onSearch()">
-                  <option value="">Todos los estados</option>
-                  <option value="ASIGNACION">Asignación</option>
-                  <option value="EN PROCESO">En proceso</option>
-                  <option value="FINALIZADA">Finalizada</option>
-                  <option value="CANCELADA">Cancelada</option>
+                  <option *ngFor="let estado of estados" [value]="estado.value">
+                    {{estado.label}}
+                  </option>
                 </select>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-3 col-lg-3">
                 <div class="d-flex align-items-center justify-content-end gap-2">
-                  <span class="text-white opacity-75">Mostrar:</span>
+                  <span class="text-white opacity-75 d-none d-sm-inline">Mostrar:</span>
                   <select class="form-select w-auto" [(ngModel)]="pageSize" (change)="changePageSize(pageSize)">
                     <option [value]="10">10</option>
                     <option [value]="20">20</option>
@@ -151,7 +148,8 @@
           <button class="btn btn-sm btn-outline-primary me-2" (click)="exportSelectedOts()">
             <i class="bi bi-download me-1"></i>Exportar
           </button>
-          <button class="btn btn-sm btn-outline-secondary" (click)="selectedOts.clear(); selectedCount = 0; selectAllChecked = false;">
+          <button class="btn btn-sm btn-outline-secondary"
+                  (click)="selectedOts.clear(); selectedCount = 0; selectAllChecked = false;">
             <i class="bi bi-x-circle me-1"></i>Limpiar
           </button>
         </div>
@@ -174,7 +172,7 @@
                   </div>
                 </th>
                 <th class="border-0">OT</th>
-                <th class="border-0">Descripción</th>
+                <th class="border-0">Proyecto</th>
                 <th class="border-0">Cliente</th>
                 <th class="border-0">Estado</th>
                 <th class="border-0">Site</th>
@@ -201,6 +199,9 @@
                   <i class="bi bi-inbox display-1 text-muted"></i>
                   <h4 class="mt-3 text-muted">No se encontraron OTs</h4>
                   <p class="text-muted">Intenta ajustar los filtros o crear una nueva OT.</p>
+                  <button class="btn btn-primary mt-3" (click)="openCreateModal()">
+                    <i class="bi bi-plus-lg me-2"></i>Crear primera OT
+                  </button>
                 </td>
               </tr>
 
@@ -243,33 +244,20 @@
                 </td>
                 <td>
                   <span class="badge" [ngClass]="getEstadoClass(ot.estadoOt)">
-                    <i class="bi me-1"
-                       [ngClass]="{
-                         'bi-check-circle': ot.estadoOt === 'FINALIZADA',
-                         'bi-clock': ot.estadoOt === 'EN PROCESO',
-                         'bi-person-badge': ot.estadoOt === 'ASIGNACION',
-                         'bi-x-circle': ot.estadoOt === 'CANCELADA',
-                         'bi-question-circle': !ot.estadoOt
-                       }"></i>
+                    <i class="bi me-1" [ngClass]="getEstadoIcon(ot.estadoOt)"></i>
                     {{ot.estadoOt || 'SIN ESTADO'}}
                   </span>
                 </td>
-               <td>
-  <div class="d-flex flex-column">
-    <span
-      class="fw-medium text-dark"
-      [title]="ot.siteNombre"
-    >
-      {{ truncateText(ot.siteNombre, 30) || '—' }}
-    </span>
-
-    <small class="text-muted">
-      {{ ot.site_descripcion || 'Sin site' }}
-    </small>
-  </div>
-</td>
-
-
+                <td>
+                  <div class="d-flex flex-column">
+                    <span class="fw-medium text-dark" [title]="ot.siteNombre">
+                      {{ truncateText(ot.siteNombre, 30) || '—' }}
+                    </span>
+                    <small class="text-muted">
+                      {{ ot.site_descripcion || 'Sin site' }}
+                    </small>
+                  </div>
+                </td>
                 <td>
                   <div class="d-flex flex-column">
                     <span class="fw-medium text-dark">{{ot.fechaApertura | date:'dd/MM/yyyy'}}</span>
@@ -300,61 +288,25 @@
           </table>
         </div>
 
-        <!-- Paginación -->
-        <div *ngIf="!loading && totalPages > 1" class="p-4 border-top">
-          <div class="row align-items-center">
-            <div class="col-md-4">
-              <p class="text-muted mb-0">
-                Mostrando <strong>{{(currentPage * pageSize) + 1}}</strong> a
-                <strong>{{Math.min((currentPage + 1) * pageSize, totalElements)}}</strong> de
-                <strong>{{totalElements}}</strong> registros
-              </p>
-            </div>
-
-            <div class="col-md-4">
-              <nav aria-label="Paginación de OTs">
-                <ngb-pagination
-                  [collectionSize]="totalElements"
-                  [page]="currentPage + 1"
-                  [pageSize]="pageSize"
-                  [maxSize]="5"
-                  [rotate]="true"
-                  [boundaryLinks]="true"
-                  (pageChange)="goToPage($event - 1)"
-                  class="justify-content-center">
-                </ngb-pagination>
-              </nav>
-            </div>
-
-            <div class="col-md-4 text-end">
-              <div class="btn-group">
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage === 0"
-                        (click)="goToPage(0)"
-                        title="Primera página">
-                  <i class="bi bi-chevron-bar-left"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage === 0"
-                        (click)="goToPage(currentPage - 1)"
-                        title="Página anterior">
-                  <i class="bi bi-chevron-left"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage >= totalPages - 1"
-                        (click)="goToPage(currentPage + 1)"
-                        title="Página siguiente">
-                  <i class="bi bi-chevron-right"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage >= totalPages - 1"
-                        (click)="goToPage(totalPages - 1)"
-                        title="Última página">
-                  <i class="bi bi-chevron-bar-right"></i>
-                </button>
-              </div>
-            </div>
-          </div>
+        <!-- Paginación Desktop -->
+        <div *ngIf="!loading && totalPages > 0" class="pagination-section">
+          <app-pagination
+            [currentPage]="currentPage"
+            [totalItems]="totalElements"
+            [totalPages]="totalPages"
+            [pageSize]="pageSize"
+            [showInfo]="true"
+            [showSizeSelector]="false"
+            [showNavigation]="true"
+            [showJumpToPage]="true"
+            [pageSizes]="[10, 20, 50, 100]"
+            [align]="'center'"
+            [size]="'md'"
+            [isLoading]="loading"
+            (pageChange)="goToPage($event)"
+            (pageSizeChange)="changePageSize($event)"
+            (refresh)="refreshTable()">
+          </app-pagination>
         </div>
       </div>
     </div>
@@ -372,6 +324,9 @@
         <i class="bi bi-inbox display-1 text-muted"></i>
         <h4 class="mt-3 text-muted">No se encontraron OTs</h4>
         <p class="text-muted">Intenta ajustar los filtros o crear una nueva OT.</p>
+        <button class="btn btn-primary mt-3" (click)="openCreateModal()">
+          <i class="bi bi-plus-lg me-2"></i>Crear primera OT
+        </button>
       </div>
 
       <!-- OTs list mobile -->
@@ -433,13 +388,14 @@
                   <div class="info-item">
                     <small class="text-muted">Cliente</small>
                     <div class="fw-medium" [title]="ot.cliente">
-                      {{truncateText(ot.cliente_id, 40) || 'Sin cliente'}}
+                      {{truncateText(ot.cliente, 40) || 'Sin cliente'}}
                     </div>
                   </div>
 
                   <div class="info-item">
                     <small class="text-muted">Estado</small>
                     <span class="badge" [ngClass]="getEstadoClass(ot.estadoOt)">
+                      <i class="bi me-1" [ngClass]="getEstadoIcon(ot.estadoOt)"></i>
                       {{ot.estadoOt || 'SIN ESTADO'}}
                     </span>
                   </div>
@@ -472,31 +428,32 @@
         </div>
 
         <!-- Paginación mobile -->
-        <div *ngIf="totalPages > 1" class="mt-4">
-          <nav aria-label="Paginación móvil">
-            <ngb-pagination
-              [collectionSize]="totalElements"
-              [page]="currentPage + 1"
-              [pageSize]="pageSize"
-              [maxSize]="3"
-              [rotate]="true"
-              [boundaryLinks]="true"
-              (pageChange)="goToPage($event - 1)"
-              class="d-flex justify-content-center">
-            </ngb-pagination>
-          </nav>
-
-          <div class="text-center mt-3">
-            <p class="text-muted mb-0">
-              Página {{currentPage + 1}} de {{totalPages}} •
-              {{totalElements}} registros
-            </p>
-          </div>
+        <div *ngIf="!loading && totalPages > 0" class="pagination-section mobile-pagination mt-4">
+          <app-pagination
+            [currentPage]="currentPage"
+            [totalItems]="totalElements"
+            [totalPages]="totalPages"
+            [pageSize]="pageSize"
+            [showInfo]="true"
+            [showSizeSelector]="false"
+            [showNavigation]="true"
+            [showJumpToPage]="true"
+            [pageSizes]="[10, 20, 50, 100]"
+            [align]="'center'"
+            [size]="'sm'"
+            [isLoading]="loading"
+            (pageChange)="goToPage($event)"
+            (pageSizeChange)="changePageSize($event)"
+            (refresh)="refreshTable()">
+          </app-pagination>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+
+
 
 <!-- Modal de Exportación Avanzada -->
 <ng-template #exportModal>

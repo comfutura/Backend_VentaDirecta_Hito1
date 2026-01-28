@@ -79,6 +79,15 @@
           </a>
         </li>
 
+         <li>
+          <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
+          </a>
+        </li>
+
         <!-- Gestión Jefatura/Analista -->
         <li>
           <a routerLink="/gestion-jefatura-analista" routerLinkActive="active" (click)="closeMobile()">
@@ -179,7 +188,7 @@
           <div class="online-indicator"></div>
         </div>
         <div class="user-info">
-          <div class="user-name">{{ username }}</div>
+          <div class="user-name">{{ nombreCompleto }}</div>
           <div class="user-role">{{ mainRole || 'Usuario' }}</div>
         </div>
         <i class="bi bi-chevron-down user-dropdown-icon" [class.rotated]="showUserMenu"></i>
@@ -250,7 +259,7 @@
             <div class="user-mini-avatar" [ngClass]="userBadgeClass">
               {{ userInitial }}
             </div>
-            <span class="user-mini-name">{{ username }}</span>
+            <span class="user-mini-name">{{ nombreCompleto }}</span>
             <i class="bi bi-chevron-down"></i>
           </div>
 
