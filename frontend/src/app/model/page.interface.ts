@@ -8,3 +8,15 @@ export interface Page<T> {
   first: boolean;
   last: boolean;
 }
+
+// src/app/models/page.interface.ts
+export interface PageResponse<T> {
+  content: T[];
+  page: {
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+  };
+}
+

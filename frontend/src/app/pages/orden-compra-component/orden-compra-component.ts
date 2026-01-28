@@ -92,22 +92,33 @@ showDetallesModal: boolean = false;        // controla modal
   //            Acciones de la tabla
   // ──────────────────────────────────────────────
 
-          verDetalle(oc: OrdenCompraResponse): void {
-        this.isLoading = true;
-        this.detalleOcSeleccionada = oc;
+detalles: OcDetalleResponse[] = [];
 
-        this.ordenService.obtenerDetallesPorOc(oc.idOc).subscribe({
-          next: (detalles) => {
-            this.detallesOc = detalles;
-            this.showDetalleModal = true; // abre el modal
-            this.isLoading = false;
-          },
-          error: (err) => {
-            this.isLoading = false;
-            Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
-          }
-        });
-      }
+verDetalle(oc: OrdenCompraResponse): void {
+  console.log('CLICK DETALLE', oc.idOc);
+
+  this.ordenService.obtenerDetallesPorOc(oc.idOc).subscribe({
+    next: (resp) => {
+      console.log('DETALLES RECIBIDOS', resp);
+
+      this.detalles = resp.content; // 🔥 SOLO EL ARRAY
+      this.mostrarModalDetalle();
+    },
+    error: () => {
+      Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
+    }
+  });
+}
+
+
+mostrarModalDetalle(): void {
+  const modal = document.getElementById('modalDetalleOc');
+  if (modal) {
+    const bsModal = new (window as any).bootstrap.Modal(modal);
+    bsModal.show();
+  }
+}
+
 // Para el modal de detalles
 showDetalleModal: boolean = false;
 detalleOcSeleccionada: OrdenCompraResponse | null = null;
