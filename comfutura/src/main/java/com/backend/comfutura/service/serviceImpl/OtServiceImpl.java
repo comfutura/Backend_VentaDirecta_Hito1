@@ -2,6 +2,7 @@ package com.backend.comfutura.service.serviceImpl;
 
 import com.backend.comfutura.Exceptions.ResourceNotFoundException;
 import com.backend.comfutura.config.security.CustomUserDetails;
+import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.request.OtCreateRequest;
 import com.backend.comfutura.dto.response.OtDetailResponse;
 import com.backend.comfutura.dto.response.OtFullResponse;
@@ -25,6 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
@@ -44,10 +46,9 @@ public class OtServiceImpl implements OtService {
     private final AnalistaClienteSolicitanteRepository analistaClienteRepository;
     private final EstadoOtRepository estadoOtRepository;
 
-    // LISTADO OPTIMIZADO + FILTRO DE TEXTO
     @Override
     @Transactional(readOnly = true)
-    public Page<OtListDto> listarOts(String search, Pageable pageable) {
+    public PageResponseDTO<OtListDto> listarOts(String search, Pageable pageable) {
         Specification<Ots> spec = (root, query, cb) -> {
             if (search == null || search.trim().isEmpty()) {
                 return cb.conjunction();
@@ -66,7 +67,23 @@ public class OtServiceImpl implements OtService {
             );
         };
 
-        return otsRepository.findAll(spec, pageable).map(this::toOtListDto);
+        // Obtener la página de Spring Data
+        Page<Ots> page = otsRepository.findAll(spec, pageable);
+
+        // Convertir a PageResponseDTO
+        List<OtListDto> content = page.getContent().stream()
+                .map(this::toOtListDto)
+                .collect(Collectors.toList());
+
+        return new PageResponseDTO<>(
+                content,
+                page.getNumber(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast(),
+                page.getSize()
+        );
     }
 
     private OtListDto toOtListDto(Ots ots) {

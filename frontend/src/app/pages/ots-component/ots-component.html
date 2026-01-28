@@ -294,62 +294,113 @@
           </table>
         </div>
 
-        <!-- Paginación -->
-        <div *ngIf="!loading && totalPages > 1" class="p-4 border-top">
-          <div class="row align-items-center">
-            <div class="col-md-4">
-              <p class="text-muted mb-0">
-                Mostrando <strong>{{(currentPage * pageSize) + 1}}</strong> a
-                <strong>{{Math.min((currentPage + 1) * pageSize, totalElements)}}</strong> de
-                <strong>{{totalElements}}</strong> registros
-              </p>
-            </div>
+ <!-- En tu template (solo las partes relevantes) -->
 
-            <div class="col-md-4">
-              <nav aria-label="Paginación de OTs">
-                <ngb-pagination
-                  [collectionSize]="totalElements"
-                  [page]="currentPage + 1"
-                  [pageSize]="pageSize"
-                  [maxSize]="5"
-                  [rotate]="true"
-                  [boundaryLinks]="true"
-                  (pageChange)="goToPage($event - 1)"
-                  class="justify-content-center">
-                </ngb-pagination>
-              </nav>
-            </div>
+<!-- Contador de registros -->
+<div *ngIf="!loading && totalPages > 1" class="p-4 border-top">
+  <div class="row align-items-center">
+    <div class="col-md-4">
+      <p class="text-muted mb-0">
+        Mostrando
+        <strong>{{(currentPage * pageSize) + 1}}</strong> a
+        <strong>{{Math.min((currentPage + 1) * pageSize, totalElements)}}</strong> de
+        <strong>{{totalElements}}</strong> registros
+        (Página {{currentPage + 1}} de {{totalPages}})
+      </p>
+    </div>
 
-            <div class="col-md-4 text-end">
-              <div class="btn-group">
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage === 0"
-                        (click)="goToPage(0)"
-                        title="Primera página">
-                  <i class="bi bi-chevron-bar-left"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage === 0"
-                        (click)="goToPage(currentPage - 1)"
-                        title="Página anterior">
-                  <i class="bi bi-chevron-left"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage >= totalPages - 1"
-                        (click)="goToPage(currentPage + 1)"
-                        title="Página siguiente">
-                  <i class="bi bi-chevron-right"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm"
-                        [disabled]="currentPage >= totalPages - 1"
-                        (click)="goToPage(totalPages - 1)"
-                        title="Última página">
-                  <i class="bi bi-chevron-bar-right"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Paginación ng-bootstrap -->
+    <div class="col-md-4">
+      <nav aria-label="Paginación de OTs">
+        <ngb-pagination
+          [collectionSize]="totalElements"
+          [page]="currentPage + 1"
+          [pageSize]="pageSize"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="goToPage($event - 1)"
+          class="justify-content-center">
+        </ngb-pagination>
+      </nav>
+    </div>
+
+    <!-- Botones de navegación manual -->
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <button class="btn btn-outline-secondary btn-sm"
+                [disabled]="currentPage === 0"
+                (click)="goToFirstPage()"
+                title="Primera página">
+          <i class="bi bi-chevron-bar-left"></i>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm"
+                [disabled]="currentPage === 0"
+                (click)="goToPrevPage()"
+                title="Página anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm"
+                [disabled]="currentPage >= totalPages - 1"
+                (click)="goToNextPage()"
+                title="Página siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm"
+                [disabled]="currentPage >= totalPages - 1"
+                (click)="goToLastPage()"
+                title="Última página">
+          <i class="bi bi-chevron-bar-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Para la versión móvil -->
+<div *ngIf="!loading && totalPages > 1" class="mt-4">
+  <nav aria-label="Paginación móvil">
+    <ngb-pagination
+      [collectionSize]="totalElements"
+      [page]="currentPage + 1"
+      [pageSize]="pageSize"
+      [maxSize]="3"
+      [rotate]="true"
+      [boundaryLinks]="true"
+      (pageChange)="goToPage($event - 1)"
+      class="d-flex justify-content-center">
+    </ngb-pagination>
+  </nav>
+
+  <div class="text-center mt-3">
+    <p class="text-muted mb-0">
+      Página {{currentPage + 1}} de {{totalPages}} •
+      {{totalElements}} registros totales
+    </p>
+    <div class="btn-group mt-2">
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage === 0"
+              (click)="goToFirstPage()">
+        <i class="bi bi-chevron-bar-left"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage === 0"
+              (click)="goToPrevPage()">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage >= totalPages - 1"
+              (click)="goToNextPage()">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage >= totalPages - 1"
+              (click)="goToLastPage()">
+        <i class="bi bi-chevron-bar-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
       </div>
     </div>
 

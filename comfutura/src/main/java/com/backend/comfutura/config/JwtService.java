@@ -61,6 +61,7 @@ public class JwtService {
                 usuario.getIdUsuario(),
                 usuario.getTrabajador() != null ? usuario.getTrabajador().getIdTrabajador() : null,
                 usuario.getUsername(),
+                usuario.getTrabajador().getNombres()+" "+usuario.getTrabajador().getApellidos(),
                 usuario.isActivo(),
                 roles
         );

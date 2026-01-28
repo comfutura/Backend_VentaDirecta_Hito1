@@ -10,6 +10,7 @@ import { ExcelService } from '../../service/excel.service';
 import { OtService } from '../../service/ot.service';
 import { OtListDto, Page } from '../../model/ots';
 import { Observable } from 'rxjs';
+import { PageResponseDTO } from '../../model/page.interface';
 
 @Component({
   selector: 'app-ots',
@@ -34,7 +35,7 @@ export class OtsComponent implements OnInit {
 
   // Datos principales
   ots: OtListDto[] = [];
-  page: Page<OtListDto> | null = null;
+  page: PageResponseDTO<OtListDto> | null = null;
   loading = false;
   errorMessage: string | null = null;
   Math=Math;
@@ -78,7 +79,7 @@ export class OtsComponent implements OnInit {
   }
 
   // ==================== CARGA DE DATOS ====================
-  loadOts(page: number = this.currentPage): void {
+loadOts(page: number = this.currentPage): void {
     this.loading = true;
     this.errorMessage = null;
 
@@ -91,9 +92,9 @@ export class OtsComponent implements OnInit {
       next: (pageData) => {
         this.page = pageData;
         this.ots = pageData.content ?? [];
-        this.totalElements = pageData.totalElements ?? 0;
-        this.currentPage = pageData.number ?? 0;
-        this.pageSize = pageData.size ?? this.pageSize;
+        this.totalElements = pageData.totalItems ?? 0;  // Cambiado de totalElements a totalItems
+        this.currentPage = pageData.currentPage ?? 0;   // Cambiado de number a currentPage
+        this.pageSize = pageData.pageSize ?? this.pageSize; // Cambiado de size a pageSize
         this.totalPages = pageData.totalPages ?? 1;
         this.loading = false;
         this.updateSelectionState();
@@ -145,6 +146,25 @@ export class OtsComponent implements OnInit {
     this.selectedOts.clear();
     this.updateSelectionCount();
     this.loadOts();
+  }
+ goToFirstPage(): void {
+    this.goToPage(0);
+  }
+
+  goToLastPage(): void {
+    this.goToPage(this.totalPages - 1);
+  }
+
+  goToPrevPage(): void {
+    if (this.currentPage > 0) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  goToNextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.goToPage(this.currentPage + 1);
+    }
   }
 
   // ==================== SELECCIÓN MÚLTIPLE ====================

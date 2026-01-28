@@ -6,6 +6,7 @@ public record UserJwtDto(
         Integer idUsuario,
         Integer idTrabajador,
         String username,
+        String nombreCompleto,
         Boolean activo,
         List<String> nivel
 ) {}

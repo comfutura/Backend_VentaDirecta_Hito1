@@ -1,10 +1,13 @@
-// src/app/models/page.interface.ts
-export interface Page<T> {
+// src/app/core/model/ots.ts
+export interface PageResponseDTO<T> {
   content: T[];
-  number: number;           // página actual (0-based)
-  size: number;
-  totalElements: number;
-  totalPages: number;
+  currentPage: number;           // En lugar de "number" (0-based)
+  totalItems: number;           // En lugar de "totalElements"
+  totalPages: number;           // En lugar de "totalPages"
   first: boolean;
   last: boolean;
+  pageSize: number;            // En lugar de "size"
 }
+
+// Cambia Page por PageResponseDTO o usa un alias
+export type Page<T> = PageResponseDTO<T>;

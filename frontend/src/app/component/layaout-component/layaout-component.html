@@ -179,7 +179,7 @@
           <div class="online-indicator"></div>
         </div>
         <div class="user-info">
-          <div class="user-name">{{ username }}</div>
+          <div class="user-name">{{ nombreCompleto }}</div>
           <div class="user-role">{{ mainRole || 'Usuario' }}</div>
         </div>
         <i class="bi bi-chevron-down user-dropdown-icon" [class.rotated]="showUserMenu"></i>
@@ -250,7 +250,7 @@
             <div class="user-mini-avatar" [ngClass]="userBadgeClass">
               {{ userInitial }}
             </div>
-            <span class="user-mini-name">{{ username }}</span>
+            <span class="user-mini-name">{{ nombreCompleto }}</span>
             <i class="bi bi-chevron-down"></i>
           </div>
 
