@@ -149,12 +149,14 @@ export class OrdenCompraComponent implements OnInit {
               total: oc.total ?? 0,
               fechaOc: oc.fechaOc ?? new Date().toISOString(),
               observacion: oc.observacion ?? '',
-              detalles: oc.detalles?.map(d => ({
-                idProducto: d.idProducto,
-                cantidad: d.cantidad,
-                precioUnitario: d.precioUnitario,
-                total: d.total,
-                observacion: d.observacion
+               detalles: oc.detalles?.map(d => ({
+                  idMaestro: d.idProducto ?? 0,  // obligatorio
+                  cantidad: d.cantidad ?? 0,
+                  precioUnitario: d.precioUnitario ?? 0,
+                  subtotal: 0,                   // backend lo calcula
+                  igv: 0,                        // backend lo calcula
+                  total: d.total ?? 0
+
               })) ?? [],
               aplicarIgv: true // o según tu lógica
             };

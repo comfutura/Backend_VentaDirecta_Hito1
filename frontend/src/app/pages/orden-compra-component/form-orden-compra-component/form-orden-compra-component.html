@@ -38,6 +38,22 @@
                 <option *ngFor="let prov of proveedores" [value]="prov.id">{{ prov.label }}</option>
               </select>
             </div>
+            <!-- forma de pago -->
+                                    <div class="col-md-6">
+                  <label class="form-label required">Forma de Pago</label>
+                  <input
+                    class="form-control"
+                    list="formasPagoList"
+                    [(ngModel)]="form.formaPago"
+                    name="formaPago"
+                    placeholder="Seleccione o escriba forma de pago"
+                    required
+                  >
+                  <datalist id="formasPagoList">
+                    <option *ngFor="let fp of formasPago" [value]="fp.id">{{ fp.label }}</option>
+                  </datalist>
+                </div>
+
 
             <!-- Estado -->
             <div class="col-md-6">
@@ -48,13 +64,50 @@
             </div>
 
 
+              <!-- Detalles -->
+                        <div class="mt-4">
+                          <h6>Detalles</h6>
+                          <table class="table table-sm table-bordered align-middle">
+                            <thead>
+                              <tr>
+                                <th>Material</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Total</th>
+                                <th>Observación</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let d of form.detalles; let i = index">
+                                <td>
+                                   <!-- Mostrar nombre del maestro, pero guardar idMaestro -->
+                                  <select class="form-select" [(ngModel)]="d.idMaestro" name="producto{{i}}" required>
+                                    <option value="0" disabled>Seleccione material...</option>
+                                    <option *ngFor="let mat of maestros" [value]="mat.id">
+                                      {{ mat.label }} <!-- Aquí ves el nombre -->
+                                    </option>
+                                  </select>
+                                </td>
+                                <td>
+                                  <input type="number" class="form-control text-end" [(ngModel)]="d.cantidad" name="cant{{i}}" min="1" required (input)="calcularTotalDetalle(d)">
+                                </td>
+                                <td>
+                                  <input type="number" class="form-control text-end" [(ngModel)]="d.precioUnitario" name="precio{{i}}" min="0" required (input)="calcularTotalDetalle(d)">
+                                </td>
+                                <td class="text-end">{{ d.total | currency:'PEN':'symbol':'1.2-2' }}</td>
+                                <td><input type="text" class="form-control" [(ngModel)]="d.total" name="obs{{i}}"></td>
+                                <td>
+                                  <button type="button" class="btn btn-sm btn-danger" (click)="eliminarDetalle(i)">Eliminar</button>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
 
-
-            <!-- Observación -->
-            <div class="col-12">
-              <label class="form-label">Observación</label>
-              <textarea class="form-control" rows="3" [(ngModel)]="form.observacion" name="observacion"></textarea>
-            </div>
+                          <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarDetalle()">
+                            <i class="bi bi-plus-lg me-1"></i>Agregar detalle
+                          </button>
+                        </div>
 
           </div>
         </form>
