@@ -19,6 +19,9 @@ export interface UserJwtDto {
   idUsuario: number;
   idTrabajador: number;
   username: string;
+  empresa: string;
+  cargo: string;
+  area: string;
   nombreCompleto: string;
   activo: boolean;
   roles: string[];

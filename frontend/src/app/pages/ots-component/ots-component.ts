@@ -1,16 +1,17 @@
 import { Component, OnInit, TemplateRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalRef, NgbDropdownModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { FormOtsComponent } from './form-ots-component/form-ots-component';
 import { OtDetailComponent } from './ot-detail-component/ot-detail-component';
 import { FileSizePipe } from '../../pipe/file-size.pipe';
 import { ExcelService } from '../../service/excel.service';
 import { OtService } from '../../service/ot.service';
-import { OtListDto, Page } from '../../model/ots';
+import { OtListDto } from '../../model/ots';
 import { Observable } from 'rxjs';
-import { PageResponseDTO } from '../../model/page.interface';
+import { PaginationComponent } from '../../component/pagination.component/pagination.component';
+import { PageResponse } from '../../model/page.interface';
 
 @Component({
   selector: 'app-ots',
@@ -19,7 +20,7 @@ import { PageResponseDTO } from '../../model/page.interface';
     CommonModule,
     FormsModule,
     NgbDropdownModule,
-    NgbPaginationModule,
+    PaginationComponent,
     FileSizePipe
   ],
   templateUrl: './ots-component.html',
@@ -35,10 +36,11 @@ export class OtsComponent implements OnInit {
 
   // Datos principales
   ots: OtListDto[] = [];
-  page: PageResponseDTO<OtListDto> | null = null;
+  page: PageResponse<OtListDto> | null = null;
   loading = false;
   errorMessage: string | null = null;
-  Math=Math;
+  Math = Math;
+
   // Paginación
   pageSize = 10;
   currentPage = 0;
@@ -52,6 +54,19 @@ export class OtsComponent implements OnInit {
     desde: '',
     hasta: ''
   };
+
+  // Opciones de estado según tus requerimientos
+  estados = [
+    { value: '', label: 'Todos los estados' },
+    { value: 'ASIGNACION', label: 'Asignación' },
+    { value: 'PRESUPUESTO_ENVIADO', label: 'Presupuesto Enviado' },
+    { value: 'CREACION_DE_OC', label: 'Creación de OC' },
+    { value: 'EN_EJECUCION', label: 'En Ejecución' },
+    { value: 'EN_LIQUIDACION', label: 'En Liquidación' },
+    { value: 'EN_FACTURACION', label: 'En Facturación' },
+    { value: 'FINALIZADO', label: 'Finalizado' },
+    { value: 'CANCELADA', label: 'Cancelada' }
+  ];
 
   // Selección múltiple
   selectedOts = new Set<number>();
@@ -79,7 +94,7 @@ export class OtsComponent implements OnInit {
   }
 
   // ==================== CARGA DE DATOS ====================
-loadOts(page: number = this.currentPage): void {
+  loadOts(page: number = this.currentPage): void {
     this.loading = true;
     this.errorMessage = null;
 
@@ -92,9 +107,9 @@ loadOts(page: number = this.currentPage): void {
       next: (pageData) => {
         this.page = pageData;
         this.ots = pageData.content ?? [];
-        this.totalElements = pageData.totalItems ?? 0;  // Cambiado de totalElements a totalItems
-        this.currentPage = pageData.currentPage ?? 0;   // Cambiado de number a currentPage
-        this.pageSize = pageData.pageSize ?? this.pageSize; // Cambiado de size a pageSize
+        this.totalElements = pageData.totalItems ?? 0;
+        this.currentPage = pageData.currentPage ?? 0;
+        this.pageSize = pageData.pageSize ?? this.pageSize;
         this.totalPages = pageData.totalPages ?? 1;
         this.loading = false;
         this.updateSelectionState();
@@ -147,24 +162,13 @@ loadOts(page: number = this.currentPage): void {
     this.updateSelectionCount();
     this.loadOts();
   }
- goToFirstPage(): void {
-    this.goToPage(0);
-  }
 
-  goToLastPage(): void {
-    this.goToPage(this.totalPages - 1);
-  }
-
-  goToPrevPage(): void {
-    if (this.currentPage > 0) {
-      this.goToPage(this.currentPage - 1);
-    }
-  }
-
-  goToNextPage(): void {
-    if (this.currentPage < this.totalPages - 1) {
-      this.goToPage(this.currentPage + 1);
-    }
+  // ==================== REFRESCAR DATOS ====================
+  refreshTable(): void {
+    this.currentPage = 0;
+    this.selectedOts.clear();
+    this.updateSelectionCount();
+    this.loadOts();
   }
 
   // ==================== SELECCIÓN MÚLTIPLE ====================
@@ -245,8 +249,6 @@ loadOts(page: number = this.currentPage): void {
     });
   }
 
-
-
   private exportToExcel(exportFn: () => Observable<Blob>, type: string): void {
     Swal.fire({
       title: 'Generando Excel...',
@@ -304,7 +306,7 @@ loadOts(page: number = this.currentPage): void {
   export(): void {
     if (this.exportFiltroActivo && this.selectedCount > 0) {
       this.exportSelectedOts();
-    }  else {
+    } else {
       this.exportAllOts();
     }
     this.closeAllModals();
@@ -411,10 +413,6 @@ loadOts(page: number = this.currentPage): void {
     });
   }
 
-
-
-
-
   // ==================== MODALES DE OT ====================
   openCreateModal(): void {
     const modalRef = this.modalService.open(FormOtsComponent, {
@@ -433,10 +431,11 @@ loadOts(page: number = this.currentPage): void {
     modalRef.result.then(
       (result) => {
         if (result === 'saved') {
-          this.loadOts();
+          // Recargar tabla automáticamente después de crear
+          this.refreshTable();
           Swal.fire({
             icon: 'success',
-            title: 'Éxito',
+            title: '¡Éxito!',
             text: 'OT creada correctamente',
             timer: 2000,
             showConfirmButton: false
@@ -470,10 +469,11 @@ loadOts(page: number = this.currentPage): void {
         modalRef.result.then(
           (result) => {
             if (result === 'saved') {
-              this.loadOts();
+              // Recargar tabla automáticamente después de editar
+              this.refreshTable();
               Swal.fire({
                 icon: 'success',
-                title: 'Éxito',
+                title: '¡Éxito!',
                 text: 'OT actualizada correctamente',
                 timer: 2000,
                 showConfirmButton: false
@@ -531,11 +531,46 @@ loadOts(page: number = this.currentPage): void {
 
     const estadoUpper = estado.toUpperCase();
     switch (estadoUpper) {
-      case 'FINALIZADA': return 'badge-success';
-      case 'EN PROCESO': return 'badge-warning';
-      case 'ASIGNACION': return 'badge-info';
-      case 'CANCELADA': return 'badge-danger';
-      default: return 'badge-secondary';
+      case 'FINALIZADO':
+      case 'FINALIZADA':
+        return 'badge-success';
+      case 'EN_EJECUCION':
+      case 'EN_LIQUIDACION':
+      case 'EN_FACTURACION':
+        return 'badge-warning';
+      case 'ASIGNACION':
+      case 'PRESUPUESTO_ENVIADO':
+      case 'CREACION_DE_OC':
+        return 'badge-info';
+      case 'CANCELADA':
+        return 'badge-danger';
+      default:
+        return 'badge-secondary';
+    }
+  }
+
+  getEstadoIcon(estado: string | undefined | null): string {
+    if (!estado) return 'bi-question-circle';
+
+    const estadoUpper = estado.toUpperCase();
+    switch (estadoUpper) {
+      case 'FINALIZADO':
+      case 'FINALIZADA':
+        return 'bi-check-circle';
+      case 'EN_EJECUCION':
+      case 'EN_LIQUIDACION':
+      case 'EN_FACTURACION':
+        return 'bi-clock';
+      case 'ASIGNACION':
+        return 'bi-person-badge';
+      case 'PRESUPUESTO_ENVIADO':
+        return 'bi-send-check';
+      case 'CREACION_DE_OC':
+        return 'bi-file-earmark-text';
+      case 'CANCELADA':
+        return 'bi-x-circle';
+      default:
+        return 'bi-question-circle';
     }
   }
 
@@ -556,7 +591,7 @@ loadOts(page: number = this.currentPage): void {
             this.loadOts();
             Swal.fire({
               icon: 'success',
-              title: 'Éxito',
+              title: '¡Éxito!',
               text: `OT ${ot.activo ? 'desactivada' : 'activada'} correctamente`,
               timer: 2000,
               showConfirmButton: false
