@@ -42,6 +42,15 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
     { id: 7, label: 'ANULADA' }
   ];
 
+  // FormOrdenCompraComponent
+formasPago: { id: string; label: string }[] = [
+  { id: 'CONTADO', label: 'Contado' },
+  { id: 'CREDITO', label: 'Crédito' },
+  { id: 'TRANSFERENCIA', label: 'Transferencia' },
+  { id: 'TARJETA', label: 'Tarjeta' }
+];
+
+
   // Form model
   form: OrdenCompraRequest = this.getDefaultForm();
 
@@ -53,9 +62,7 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
     private dropdownService: DropdownService
   ) {}
 
-  ngOnInit(): void {
-    this.cargarDropdowns();
-  }
+
 
   private cargarDropdowns(): void {
     this.isLoading = true;
@@ -85,9 +92,9 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
     }
   }
 
-  private aplicarValoresEdicion(): void {
-    if (this.isEdit && this.ocToEdit) {
-     this.form = {
+private aplicarValoresEdicion(): void {
+  if (this.isEdit && this.ocToEdit) {
+    this.form = {
       idEstadoOc: this.ocToEdit.idEstadoOc ?? 1,
       idOts: this.ocToEdit.idOts ?? 0,
       idProveedor: this.ocToEdit.idProveedor ?? 0,
@@ -98,18 +105,32 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
       total: this.ocToEdit.total ?? 0,
       fechaOc: this.ocToEdit.fechaOc ?? new Date().toISOString(),
       observacion: this.ocToEdit.observacion || '',
-      detalles: this.ocToEdit.detalles?.map(d => ({
-        idProducto: d.idProducto,
-        cantidad: d.cantidad,
-        precioUnitario: d.precioUnitario,
-        total: d.total,
-        observacion: d.observacion})) ?? [],
+
+      // 🔹 Mapear correctamente a OcDetalleRequest
+      detalles: this.ocToEdit.detalles?.map(d => {
+        const cantidad = d.cantidad ?? 0;
+        const precio = d.precioUnitario ?? 0;
+        const subtotal = cantidad * precio;
+        const igv = subtotal * 0.18; // si siempre es 18%
+        const total = subtotal + igv;
+
+        return {
+          idMaestro: d.idProducto ?? 0,
+          cantidad,
+          precioUnitario: precio,
+          subtotal,
+          igv,
+          total
+        };
+      }) ?? [],
+
       aplicarIgv: true
-      };
-    } else {
-      this.form = this.getDefaultForm();
-    }
+    };
+  } else {
+    this.form = this.getDefaultForm();
   }
+}
+
 
   private getDefaultForm(): OrdenCompraRequest {
   return {
@@ -164,4 +185,54 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
       showConfirmButton: false
     });
   }
+
+  // Lista de materiales para el select
+materiales: DropdownItem[] = [];
+
+ngOnInit(): void {
+  this.cargarDropdowns();
+  this.cargarMateriales(); // carga los materiales
+}
+
+cargarMateriales(): void {
+  // Simulación, reemplazar con tu service real
+  this.materiales = [
+    { id: 1, label: 'Material A' },
+    { id: 2, label: 'Material B' },
+    { id: 3, label: 'Material C' }
+  ];
+}
+
+// Agregar nuevo detalle
+agregarDetalle(): void {
+ this.form.detalles.push({
+  idMaestro: 0,
+  cantidad: 1,
+  precioUnitario: 0,
+  subtotal: 0,
+  igv: 0,
+  total: 0
+});
+}
+
+// Eliminar detalle
+eliminarDetalle(index: number): void {
+  this.form.detalles.splice(index, 1);
+  this.calcularTotales();
+}
+
+// Calcular total de un detalle
+calcularTotalDetalle(d: any): void {
+  d.total = (d.cantidad || 0) * (d.precioUnitario || 0);
+  this.calcularTotales();
+}
+
+// Calcular totales de la OC
+calcularTotales(): void {
+  const subtotal = this.form.detalles.reduce((sum, d) => sum + (d.total || 0), 0);
+  this.form.subtotal = subtotal;
+  this.form.igvTotal = this.form.aplicarIgv ? subtotal * 0.18 : 0;
+  this.form.total = subtotal + this.form.igvTotal;
+}
+
 }

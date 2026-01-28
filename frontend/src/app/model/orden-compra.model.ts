@@ -1,13 +1,17 @@
 // orden-compra.model.ts
 
 // 🔹 Detalle para request (crear/actualizar OC)
+// src/app/model/orden-compra.model.ts
+
 export interface OcDetalleRequest {
-  idProducto?: number;        // ID del producto o ítem
-  cantidad?: number;          // Cantidad solicitada
-  precioUnitario?: number;    // Precio por unidad
-  total?: number;             // Total de la línea (cantidad * precioUnitario)
-  observacion?: string;       // Observación específica del detalle
+  idMaestro: number;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+  igv: number;
+  total: number;
 }
+
 
 // 🔹 Detalle para response (cuando recibes OC del backend)
 export interface OcDetalleResponse {
